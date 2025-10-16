@@ -1,4 +1,5 @@
 # Pflichtenheft
+
 ## 1.	Anzeige Füllstand
 
   a.	Darstellung über mehrfarbige Anzeige (rot, gelb, grün) auf dem Display
@@ -7,7 +8,7 @@
   
   c.	Anzeige ist schlicht und einfach gehalten
   
-  d.	Aktualisierung der Anzeige in Echtzeit
+  d.	Aktualisierung der Anzeige jede 500 ms
   
   e.	Farbkodierung: 
   
@@ -16,6 +17,7 @@
     ii.	Gelb: Warnung (10-50%)
     
     iii.	Rot: kritisch (<10%, Trockenlauf droht)
+    
 ## 2.	Warnfunktion bei niedrigem Füllstand
   
   a.	Benutzerdefinierbare Warnschwelle einstellbar auf Display (10%-50%)
@@ -36,7 +38,7 @@
     
     ii.	Überhitzung/Sicherheitsabschaltung Heizwendel (>120 C)
     
-    iii.	Sensorfehler (z. B. Sensorwert unrealistisch, Fehlermeldung Display -> Reparatur)
+    iii.	Sensorfehler (z. B. Sensorwert unrealistisch, Fehlermeldung Display)
 
 ## 4.	Sensordatenerfassung/Zustandsüberwachung/Steuerlogik
  
@@ -62,7 +64,7 @@
   
     i.	Keine Änderung des Sensorwertes über feste Zeitspanne (10s) führt zu Fehlermeldung auf Display
     
-    ii.	Überprüfung auf plausible Wertebereiche bei Boot des Gerätes
+    ii.	Überprüfung auf plausible Wertebereiche Sensoren bei Boot des Gerätes
   
   d. Zustandserkennung:
   
