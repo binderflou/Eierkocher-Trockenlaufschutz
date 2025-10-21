@@ -104,14 +104,14 @@ Schnittstellen:
 
 ## Kurzüberblick (Zusammenfassung)
 
-###   Teilfunktionalität                      Hauptaufgabe
+###   Teilfunktionalität:                      Hauptaufgabe
 
-1  	Sensor-Datenerfassung	              Messung von Wasserstand, Temperatur, Zeit
+1  	Sensor-Datenerfassung:	              Messung von Wasserstand, Temperatur, Zeit
 
-2	  Zustandsüberwachung	                Analyse der Sensorwerte und Zustandserkennung
+2	  Zustandsüberwachung:	                Analyse der Sensorwerte und Zustandserkennung
 
-3	  Steuerlogik und Abschaltmanagement	Entscheidung über Heizung/Warnung/Abschaltung
+3	  Steuerlogik und Abschaltmanagement:	Entscheidung über Heizung/Warnung/Abschaltung
 
-4	  Selbsttest und Fehlerdiagnose	      Prüfung auf Plausibilität und Systemfehler
+4	  Selbsttest und Fehlerdiagnose:	      Prüfung auf Plausibilität und Systemfehler
 
-5	  Benutzerinterface und Warnsystem	  Anzeige, Signalisierung, Nutzerinformation
+5	  Benutzerinterface und Warnsystem:	  Anzeige, Signalisierung, Nutzerinformation
