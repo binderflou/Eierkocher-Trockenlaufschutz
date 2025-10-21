@@ -157,4 +157,4 @@ Das System gilt als erfolgreich umgesetzt, wenn:
 
 ---
 
-© 2025 – Projekt Trockenlaufschutz / [Dein Name]
+© 2025 – Projekt Trockenlaufschutz / Florian Binder
