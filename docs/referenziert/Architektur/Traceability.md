@@ -2,8 +2,8 @@
 
 | **Requirement ID** | **Requirement Beschreibung** | **Teilfunktion** | **Systemkomponente** | **Verfolgbarkeit / Kommentar** |
 |-------------------|-----------------------------|-----------------|-------------------|-------------------------------|
-| R1.1 | Füllstandsmessung: 0–100 %, Auflösung ≤5 %, Reaktionszeit ≤200 ms, Sensorfehlererkennung, Genauigkeit ±5 % | Sensordatenerfassung | Füllstandssensor | Misst Wasserstand über kapazitiven Sensor |
-| R1.2 | Temperaturmessung: 0–1500 °C, Genauigkeit ±1 °C, Abtastrate ≥5 Hz, Überhitzungserkennung, Sicherheitsabschaltung >110 °C | Sensordatenerfassung | Temperatursensor | Erfasst Heizplattentemperatur und schützt vor Überhitzung |
+| R1.1 | Füllstandsmessung: 0-250 ml, Auflösung ≤5 %, Reaktionszeit ≤500 ms, Sensorfehlererkennung, Genauigkeit ±5 % | Sensordatenerfassung | Füllstandssensor | Misst Wasserstand über kapazitiven Sensor |
+| R1.2 | Temperaturmessung: 0–150 °C, Genauigkeit ±1 °C, Abtastrate ≥5 Hz, Überhitzungserkennung, Sicherheitsabschaltung >110 °C | Sensordatenerfassung | Temperatursensor | Erfasst Heizplattentemperatur und schützt vor Überhitzung |
 | R1.3 | Zeitmessung: interne Echtzeituhr ±0,1 s, Messintervall ≤200 ms | Sensordatenerfassung | Timer | Liefert Zeitstempel für Plausibilitätsprüfungen und Verlaufsauswertung |
 | R2.1 | Auswertung Sensorwerte: Sollwertvergleich, Statuswarnung bei Abweichung >10 %, Berechnungszyklus ≤500 ms | Zustandsüberwachung | Steuerlogik | Vergleicht Sensorwerte kontinuierlich mit Sollwerten |
 | R2.2 | Vergleich Soll/Ist kontinuierlich, Update ≥2×/s, Sicherheitsmodus bei fehlendem Messwert | Zustandsüberwachung | Steuerlogik | Entscheidet Betriebszustand: Bereit, Warnung, Kritisch, Trockenlauf |
