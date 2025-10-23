@@ -146,3 +146,13 @@
       Signaltyp: 2 × kurz bei Warnung, 3 × lang bei Fehler
 
       Reaktionszeit: ≤ 300 ms nach Ereignis
+
+#   Zusammenfassung Requirements
+
+   - Sensordatenerfassung
+   - Zustandsüberwachung
+   - Steuerlogik
+   - Selbsttest und Fehlerdiagnose
+   - Benutzerinterface
+
+
