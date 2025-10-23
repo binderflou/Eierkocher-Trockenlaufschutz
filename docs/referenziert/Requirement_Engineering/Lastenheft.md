@@ -8,7 +8,7 @@ Das System informiert den Benutzer visuell und akustisch über den aktuellen Fü
 
 ---
 
-## 2. Funktionsanforderungen
+## 2. Funktionale Requirements
 
 ### 2.1 Füllstandserkennung
 - **Ziel:** Kontinuierliche Messung des Wasserfüllstands im Eierkocher.  
