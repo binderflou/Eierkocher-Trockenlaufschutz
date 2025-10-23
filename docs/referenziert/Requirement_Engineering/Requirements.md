@@ -1,8 +1,10 @@
+# Funktionale Requirements
+
 # 1. Sensordatenerfassung
 
    ## 1.1 Füllstand
 
-   - Messbereich: 0 % – 100 % des zulässigen Behältervolumens
+   - Messbereich: 0 % – 100 % des zulässigen Behältervolumens (250 ml)
 
    - Messauflösung: ≤ 5 % des Gesamtvolumens
 
