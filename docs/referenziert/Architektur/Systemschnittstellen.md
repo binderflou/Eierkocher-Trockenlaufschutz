@@ -1,10 +1,13 @@
 # Systemkomponenten 
+
 - Sensorik (Füllstand, Temperatur)
 - Mikrocontroller (Auswertelogik + Steuerlogik)
 - Benutzer Interface (Display, Summer)
 - Stromversorgung
 - Heizelement
 
+
+# Systemschnittstellen
 
 | Schnittstelle | Quelle | Ziel | Art der Daten | Beschreibung |
 |---------------|--------|-----|---------------|--------------|
