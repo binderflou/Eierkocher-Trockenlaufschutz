@@ -1,6 +1,4 @@
 # Systemgrenzen
 
-Sensorik -> Zustandsüberwachung -> Steuerlogik -> Display
-                                        |
-                                        |
-                                    Heizelement
+- Sensorik (Füllstand, Temperatur)
+- 
