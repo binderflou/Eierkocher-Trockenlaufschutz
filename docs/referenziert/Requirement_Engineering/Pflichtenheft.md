@@ -13,7 +13,7 @@ Die Steuerung erfolgt über einen **Arduino Nano** mit angeschlossener Sensorik 
 | Komponente | Typ | Beschreibung |
 |-------------|-----|--------------|
 | Mikrocontroller | Arduino Nano | Zentrale Steuerung, Auswertung der Sensoren, Ansteuerung von Display, Summer, Relais |
-| Füllstandsensor | Kapazitiver Sensor (0–3,3 V) | Misst Wasserstand zwischen 5 ml (0 %) und 200 ml (100 %) |
+| Füllstandsensor | Kapazitiver Sensor (0–3,3 V) | Misst Wasserstand zwischen 5 ml (0 %) und 250 ml (100 %) |
 | Temperatursensor | NTC / DS18B20 | Misst Temperatur an Heizplatte (30–150 °C) |
 | Display | LCD oder OLED (mind. 0,96") | Anzeige von Füllstand, Warnungen, Temperatur und Fehlern |
 | Summer | Akustisches Warnsignal | Ton bei Warnungen und Fehlern |
