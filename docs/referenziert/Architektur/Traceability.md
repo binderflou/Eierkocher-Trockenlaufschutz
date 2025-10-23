@@ -25,18 +25,7 @@ So ist jederzeit nachvollziehbar, welche Funktionalität welche Anforderung erf�
 
 ---
 
-## 🔍 Hinweise zur Nachverfolgbarkeit
-
-- **Traceability Matrix:**  
-  Jede Anforderung (RQ-xx) ist eindeutig mit einem oder mehreren Testfällen (T-xx) und Teilfunktionalitäten verknüpft.  
-  → So kann später im Testbericht direkt geprüft werden, ob alle Anforderungen erfüllt wurden.  
-
-- **Änderungsmanagement:**  
-  Wenn ein Requirement geändert wird, kann gezielt überprüft werden, welche Testfälle und Softwaremodule betroffen sind.
-
----
-
-## Teilfunktions-Zuordnung (Kurzüberblick)
+## Teilfunktions-Zuordnung 
 
 | **Teilfunktionalität** | **Abgedeckte Requirements** | **Verknüpfte Testfälle** |
 |--------------------------|-----------------------------|---------------------------|
