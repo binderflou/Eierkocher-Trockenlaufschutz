@@ -1,2 +1,6 @@
-# MeinGit
-Übungsaufgabe 1 SW Engineering
+# Software Engineering Projekt 
+## Eierkocher Trockenlaufschutz
+
+# Teilfunktionalitäten
+
+
