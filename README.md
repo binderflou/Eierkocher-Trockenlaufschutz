@@ -1,5 +1,5 @@
 ## Teilfunktionalitäten
-| **Nr.** | **Hauptfunktion** | **Teilfunktionalität** | **Beschreibung** |
+| **Nr.** | **Teilfunktion** | **Unterfunktion** | **Beschreibung** |
 |----------|-------------------|------------------------|------------------|
 | 1 | Sensordatenerfassung | Füllstandsmessung | Misst Wasserstand über kapazitiven Sensor |
 |   |   | Temperaturmessung | Erfasst Heizplattentemperatur |
