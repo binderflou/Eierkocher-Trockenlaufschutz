@@ -22,7 +22,7 @@ Die Steuerung erfolgt über einen **Arduino Nano** mit angeschlossener Sensorik 
 
 ---
 
-## 3. Funktionale Anforderungen
+## 3. Funktionale Requirements
 
 ### 3.1 Anzeige des Füllstands
 
@@ -152,7 +152,7 @@ Die Steuerung erfolgt über einen **Arduino Nano** mit angeschlossener Sensorik 
 
 ---
 
-## 5. Nicht-funktionale Anforderungen
+## 5. Nicht-funktionale Requirements
 
 | Kriterium | Zielwert | Beschreibung |
 |------------|-----------|--------------|
