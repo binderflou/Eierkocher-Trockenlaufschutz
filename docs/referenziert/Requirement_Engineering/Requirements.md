@@ -8,7 +8,7 @@
 
    - Reaktionszeit (von Füllstandsänderung bis Messwertaktualisierung): ≤ 200 ms
 
-   - Sensorfehlererkennung: Messwert außerhalb 0–110 % → Fehlermeldung „Sensorfehler“
+   - Sensorfehlererkennung: Messwert außerhalb 0–110 % → Fehlermeldung „Sensorfehler“ 
 
    - Genauigkeit: ± 5 % des Messbereichs
 
