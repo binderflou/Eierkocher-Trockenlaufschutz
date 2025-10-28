@@ -1,31 +1,34 @@
 # Architektur 
+## Softwarearchitektur Trockenlaufschutz 
 
+# Softwarearchitektur – Wasser-/Heizsystem
+
+```mermaid
 graph TD
     %% Sensordatenerfassung
-    A[Füllstandssensor] --> B[Sensor-Datenverarbeitung]
-    C[Temperatursensor] --> B
-    D[RTC/Timer] --> B
+    FILL[Füllstandssensor] --> DAT[Sensor-Datenverarbeitung]
+    TEMP[Temperatursensor] --> DAT
+    TIME[RTC/Timer] --> DAT
 
     %% Datenverarbeitung & Zustandsüberwachung
-    B --> E[Soll/Ist-Vergleich]
-    E --> F[Statusbestimmung: Normal / Warnung / Kritisch]
+    DAT --> SIV[Soll/Ist-Vergleich]
+    SIV --> STATUS[Statusbestimmung: Normal / Warnung / Kritisch]
 
     %% Steuerlogik & Sicherheit
-    F --> G[Heizungssteuerung]
-    F --> H[Trockenlaufschutz / Sicherheitsmodus]
+    STATUS --> HEAT[Heizungssteuerung]
+    STATUS --> SAFETY[Trockenlaufschutz / Sicherheitsmodus]
 
     %% Benutzerinterface
-    B --> I[Füllstandsanzeige]
-    B --> J[Temperaturanzeige]
-    F --> K[Fehler- und Warnsignalmodul]
+    DAT --> DISPLAY_FILL[Füllstandsanzeige]
+    DAT --> DISPLAY_TEMP[Temperaturanzeige]
+    STATUS --> WARN[Fehler- und Warnsignalmodul]
 
     %% Test- und Diagnosemodul
-    L[Selbsttest & Plausibilitätsprüfung] --> B
-    L --> F
-    L --> K
+    TEST[Selbsttest & Plausibilitätsprüfung] --> DAT
+    TEST --> SIV
+    TEST --> WARN
 
-    %% Externe Schnittstellen / Benutzer
-    M[Benutzer] --> I
-    M --> J
-    M --> K
-
+    %% Benutzer / Externe Schnittstellen
+    USER[Benutzer] --> DISPLAY_FILL
+    USER --> DISPLAY_TEMP
+    USER --> WARN
