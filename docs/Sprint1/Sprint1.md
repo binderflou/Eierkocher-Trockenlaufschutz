@@ -7,3 +7,5 @@ laufähigen Prototypen zu erhalten. Konkret wurden folgende Kernfunktionaliäten
 - korrektes Einlesen der Sensorwerte (simuliert)
 - Verarbeitung und Anzeige selbiger
 - Abschaltung bei kritischem Füllstand
+Dazu gehören folgende Requirements:
+- 
