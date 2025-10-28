@@ -4,13 +4,13 @@
 |-------------------|-----------------------------|-------------------|--------|
 | R1.1 | Füllstandsmessung: 0–250 ml, Auflösung ≤5 %, Reaktionszeit ≤500 ms, Sensorfehlererkennung, Genauigkeit ±5 % | Füllstandssensor | 1 | 
 | R1.2 | Temperaturmessung: 0–150 °C, Genauigkeit ±1 °C, Abtastrate ≥5 Hz, Überhitzungserkennung, Sicherheitsabschaltung >110 °C | Temperatursensor | 1 |
-| R1.3 | Zeitmessung: interne Echtzeituhr ±0,1 s, Messintervall ≤200 ms | Timer |
+| R1.3 | Zeitmessung: interne Echtzeituhr ±0,1 s, Messintervall ≤200 ms | Timer | 1 |
 | R2.1 | Auswertung Sensorwerte: Sollwertvergleich, Statuswarnung bei Abweichung >10 %, Berechnungszyklus ≤500 ms | Steuerlogik |
 | R2.2 | Vergleich Soll/Ist kontinuierlich, Update ≥2×/s, Sicherheitsmodus bei fehlendem Messwert | Steuerlogik |
 | R2.3 | Fehleranalyse: Sensorfehler, Überhitzung | Steuerlogik | 1 | 
-| R3.1 | Heizungssteuerung: Abschalten bei Füllstand <10 % oder Temperaturanstieg >5 °C/s, Reaktionszeit ≤1 s | Heizsystem | 
+| R3.1 | Heizungssteuerung: Abschalten bei Füllstand <10 % oder Temperaturanstieg >5 °C/s, Reaktionszeit ≤1 s | Heizsystem | 1 |
 | R3.2 | Warnungen: Anzeigewechsel ≤300 ms, akustisches Signal bei kritischem Zustand, Wiederholung alle 10 s | Display & Summer |
-| R3.3 | Berechnung tatsächlicher Füllstand: Sensordaten + Temperaturkompensation, Berechnungszeit ≤100 ms, gleitender Mittelwert | Steuerlogik |
+| R3.3 | Berechnung tatsächlicher Füllstand: Sensordaten + Temperaturkompensation, Berechnungszeit ≤100 ms, | Steuerlogik | 1 |
 | R4.1 | Plausibilitätsprüfung beim Einschalten: Temperatur 0–50 °C, Füllstand 0–100 %, Dauer ≤2 s | Steuerlogik |
 | R4.2 | Fehlerklassifizierung: Warnung (Füllstand <20 %), Fehler (Trockenlauf), Kritisch (Sensorfehler/Überhitzung), Anzeige <300 ms | Steuerlogik |
 | R4.3 | Zyklischer Selbsttest: alle 30 s, unveränderte Werte >10 s → Plausibilitätswarnung | Steuerlogik |
