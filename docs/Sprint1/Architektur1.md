@@ -13,7 +13,7 @@ graph TD
 
     subgraph Verarbeitung
         DAT[Sensorverarbeitung]
-        STATUS[Status]
+        STATUS[Auswertelogik]
     end
 
     subgraph Steuerung
