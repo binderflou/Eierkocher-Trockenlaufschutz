@@ -1,6 +1,6 @@
 # Systemkomponenten 
 
-- Sensorik (Füllstand, Temperatur)
+- Sensorik (Füllstand, Temperatur, Timer)
 - Mikrocontroller (Auswertelogik + Steuerlogik)
 - Benutzer Interface (Display, Summer)
 - Stromversorgung
