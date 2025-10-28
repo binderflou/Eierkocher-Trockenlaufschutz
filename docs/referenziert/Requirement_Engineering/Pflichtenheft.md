@@ -13,18 +13,19 @@ Die Steuerung erfolgt über einen **Arduino Nano** mit angeschlossener Sensorik 
 | Komponente | Typ | Beschreibung |
 |-------------|-----|--------------|
 | Mikrocontroller | Arduino Nano | Zentrale Steuerung, Auswertung der Sensoren, Ansteuerung von Display, Summer, Relais |
-| Füllstandsensor | Kapazitiver Sensor (0–3,3 V) | Misst Wasserstand zwischen 5 ml (0 %) und 250 ml (100 %) |
-| Temperatursensor | NTC / DS18B20 | Misst Temperatur an Heizplatte (30–150 °C) |
-| Display | LCD oder OLED (mind. 0,96") | Anzeige von Füllstand, Warnungen, Temperatur und Fehlern |
-| Summer | Akustisches Warnsignal | Ton bei Warnungen und Fehlern |
-| Relais / MOSFET | Schaltelement | Steuerung der Heizleistung (An/Aus) |
+| Füllstandsensor | Kapazitiver Sensor (0–3,3 V) | Misst Wasserstand zwischen 5 ml (0 %) und 250 ml (100 %) – **R1.1** |
+| Temperatursensor | NTC / DS18B20 | Misst Temperatur an Heizplatte (30–150 °C) – **R1.2** |
+| Timer / Echtzeituhr | Intern (Arduino) | Zeitstempel für Plausibilität und Verlaufsauswertung – **R1.3** |
+| Display | LCD oder OLED (mind. 0,96") | Anzeige von Füllstand, Warnungen, Temperatur und Fehlern – **R5.1–R5.3** |
+| Summer | Akustisches Warnsignal | Ton bei Warnungen und Fehlern – **R5.4** |
+| Relais / MOSFET | Schaltelement | Steuerung der Heizleistung (An/Aus) – **R3.1** |
 | Spannungsversorgung | 5 V DC | Versorgung von Arduino, Sensoren und Peripherie |
 
 ---
 
 ## 3. Funktionale Requirements
 
-### 3.1 Anzeige des Füllstands
+### 3.1 Anzeige des Füllstands (**R5.1, R5.2, R5.3**)
 
 - **Darstellung:**  
   - Mehrfarbige Anzeige (Grün, Gelb, Rot) auf dem Display  
@@ -40,20 +41,20 @@ Die Steuerung erfolgt über einen **Arduino Nano** mit angeschlossener Sensorik 
 
 ---
 
-### 3.2 Warnfunktion bei niedrigem Füllstand
+### 3.2 Warnfunktion bei niedrigem Füllstand (**R3.1, R3.2, R5.4, R5.5**)
 
-- **Benutzerdefinierte Warnschwelle:** Einstellbar zwischen 10 % und 50 % über das Display-Menü.  
+- **Benutzerdefinierte Warnschwelle:** Einstellbar zwischen 10 % und 50 % über das Display-Menü (**R5.5**).  
 - **Aktionen bei Unterschreitung der Warnschwelle:**  
   - **Visuell:** Rotes Segment blinkt (1 Hz Frequenz)  
-  - **Akustisch:** Piepton (70 dB(A), 2× kurz)  
+  - **Akustisch:** Piepton (70 dB(A), 2× kurz) (**R5.4**)  
 - **Automatische Abschaltung:**  
-  - Bei Füllstand < 10 % oder Temperaturanstieg > 5 °C/s  
-  - Heizung wird über Relais innerhalb von **≤ 1 s** deaktiviert  
-- **Anzeige:** Fehlermeldung „Trockenlauf erkannt“ bleibt aktiv, bis Benutzer durch Taste **OK** quittiert.  
+  - Bei Füllstand < 10 % oder Temperaturanstieg > 5 °C/s (**R3.1**)  
+  - Heizung wird über Relais innerhalb von ≤ 1 s deaktiviert  
+- **Anzeige:** Fehlermeldung „Trockenlauf erkannt“ bleibt aktiv, bis Benutzer durch Taste **OK** quittiert. (**R3.2**)  
 
 ---
 
-### 3.3 Fehlermeldungen und Diagnose
+### 3.3 Fehlermeldungen und Diagnose (**R4.1–R4.3**)
 
 - **Ziel:** Klare und priorisierte Darstellung von Systemstörungen.  
 - **Fehlertypen und Reaktionen:**
@@ -71,29 +72,30 @@ Die Steuerung erfolgt über einen **Arduino Nano** mit angeschlossener Sensorik 
 
 ---
 
-### 3.4 Sensordatenerfassung, Zustandsüberwachung und Steuerlogik
+### 3.4 Sensordatenerfassung, Zustandsüberwachung und Steuerlogik  
+(**R1.1–R1.3, R2.1–R2.3, R3.3**)
 
-#### a. Füllstandsensorik
-- Kapazitiver Sensor (0–3,3 V Analogausgang)
+#### a. Füllstandsensorik (**R1.1**)
+- Kapazitiver Sensor (0–3,3 V Analogausgang)  
 - **Messbereich:** 5 ml = 0 %, 200 ml = 100 % (± 5 %)  
 - **Abtastrate:** 5 Hz (200 ms)  
-- **Filterung:** Gleitender Mittelwert (5 Messpunkte)
+- **Filterung:** Gleitender Mittelwert (5 Messpunkte)  
 
-#### b. Temperaturerfassung
+#### b. Temperaturerfassung (**R1.2**)
 - Messung über NTC oder DS18B20-Sensor an Heizplatte  
 - **Messbereich:** 30–150 °C  
 - **Abtastung:** 5 Hz  
 - **Trockenlauf-Erkennung:** Temperaturanstieg > 5 °C/s über 500 ms  
 - **Überhitzungsschutz:** Abschaltung > 120 °C  
 
-#### c. Sensorüberwachung
+#### c. Sensorüberwachung (**R2.3, R4.3**)
 - Keine Änderung des Füllstandwertes > 10 s → Fehleranzeige  
-- Plausibilitätsprüfung bei Boot:  
+- Plausibilitätsprüfung bei Boot (**R4.1**):  
   - Temperatur: 0–50 °C  
   - Füllstand: 0–100 %  
-- Bei unplausiblen Werten → Warnung „Sensorfehler“ und Deaktivierung Heizung.
+- Bei unplausiblen Werten → Warnung „Sensorfehler“ und Deaktivierung Heizung.  
 
-#### d. Zustandslogik
+#### d. Zustandslogik (**R2.1, R2.2, R3.1, R3.2**)
 
 | Zustand | Bedingung | Anzeige | Aktion |
 |----------|------------|----------|---------|
@@ -104,7 +106,7 @@ Die Steuerung erfolgt über einen **Arduino Nano** mit angeschlossener Sensorik 
 | Überhitzung | T > 120 °C | Warnsymbol „Überhitzung“ | Heizung aus |
 | Sensorfehler | Unplausible Werte | Fehlermeldung | Heizung aus |
 
-#### e. Steuerung / Logik
+#### e. Steuerung / Logik (**R2.1–R2.3, R3.3**)
 - Steuerung erfolgt durch **Arduino Nano**.  
 - **Programmlogik:**  
   1. Erfassung Sensorwerte  
@@ -115,19 +117,19 @@ Die Steuerung erfolgt über einen **Arduino Nano** mit angeschlossener Sensorik 
 
 ---
 
-### 3.5 Benutzerinterface
+### 3.5 Benutzerinterface (**R5.1–R5.5**)
 
 - **Displayinhalte:**  
-  - Füllstand in ml  
-  - Füllstandsampel (Grün/Gelb/Rot)  
+  - Füllstand in ml (**R5.1**)  
+  - Füllstandsampel (Grün/Gelb/Rot) (**R5.2**)  
   - Temperatur (°C)  
-  - Fehlermeldungen (priorisiert)  
+  - Fehlermeldungen (priorisiert) (**R5.3**)  
 - **Akustische Signale:**  
-  - Warnung: 2× kurz  
-  - Fehler: 3× lang  
+  - Warnung: 2× kurz (**R5.4**)  
+  - Fehler: 3× lang (**R5.4**)  
 - **Bedienung:**  
   - Eine Taste („OK“) zur Quittierung von Fehlern  
-  - Menüsteuerung über Dreh-Encoder oder Taster optional  
+  - Menüsteuerung über Dreh-Encoder oder Taster optional (**R5.5**)  
 - **Barrierefreiheit:**  
   - Farbcodes werden durch Symbole ergänzt  
   - Hoher Kontrast (min. 7:1 Verhältnis)  
@@ -137,18 +139,18 @@ Die Steuerung erfolgt über einen **Arduino Nano** mit angeschlossener Sensorik 
 
 ---
 
-## 4. Selbsttest und Fehlerdiagnose
+## 4. Selbsttest und Fehlerdiagnose (**R4.1–R4.3**)
 
-- **Automatischer Selbsttest beim Einschalten:**
+- **Automatischer Selbsttest beim Einschalten:**  
   - Prüft Sensoren auf plausible Wertebereiche  
   - Testet Display-Elemente (alle Farben kurz aktiv)  
-  - Prüft Summer (1 kurzer Ton)
+  - Prüft Summer (1 kurzer Ton)  
 - **Dauer:** ≤ 2 s  
 - **Anzeige:**  
   - Erfolgreich → Grün  
   - Fehler → Fehlermeldung mit Symbol und Ton  
 - **Laufende Prüfung:**  
-  - Alle 30 s wird Sensorplausibilität erneut überprüft  
+  - Alle 30 s wird Sensorplausibilität erneut überprüft (**R4.3**)  
 
 ---
 
@@ -169,14 +171,14 @@ Die Steuerung erfolgt über einen **Arduino Nano** mit angeschlossener Sensorik 
 
 ---
 
-## 6. Sicherheitsfunktionen
+## 6. Sicherheitsfunktionen (**R3.1–R3.3, R4.2**)
 
-- Heizung deaktiviert bei:
-  - Füllstand < 10 %  
-  - Temperatur > 120 °C  
-  - Sensorfehler oder Kommunikationsfehler  
+- Heizung deaktiviert bei:  
+  - Füllstand < 10 % (**R3.1**)  
+  - Temperatur > 120 °C (**R3.1**)  
+  - Sensorfehler oder Kommunikationsfehler (**R4.2**)  
 - Alle sicherheitsrelevanten Funktionen werden im **Fail-Safe-Modus** ausgeführt (Heizung aus).  
-- Softwarefehler (Watchdog-Reset) führen zu sicherem Zustand (Abschaltung).
+- Softwarefehler (Watchdog-Reset) führen zu sicherem Zustand (Abschaltung).  
 
 ---
 
@@ -193,12 +195,12 @@ Die Steuerung erfolgt über einen **Arduino Nano** mit angeschlossener Sensorik 
 
 Das System gilt als erfolgreich umgesetzt, wenn:
 
-1. Alle Sensoren zuverlässig arbeiten und Trockenlauf in 100 % der Tests erkannt wird.  
-2. Warnungen (akustisch und visuell) klar unterscheidbar sind.  
-3. Abschaltung bei kritischem Zustand < 1 s erfolgt.  
-4. Keine Fehlabschaltung (> 95 % Erfolgsrate).  
-5. Selbsttest beim Einschalten funktioniert fehlerfrei.  
-6. Nach Quittierung eines Fehlers wechselt Anzeige auf Grün und Gerät ist betriebsbereit.
+1. Alle Sensoren zuverlässig arbeiten und Trockenlauf in 100 % der Tests erkannt wird (**R1.1–R1.2, R3.1**).  
+2. Warnungen (akustisch und visuell) klar unterscheidbar sind (**R3.2, R5.1–R5.4**).  
+3. Abschaltung bei kritischem Zustand < 1 s erfolgt (**R3.1**).  
+4. Keine Fehlabschaltung (> 95 % Erfolgsrate) (**R2.1, R3.3**).  
+5. Selbsttest beim Einschalten funktioniert fehlerfrei (**R4.1–R4.3**).  
+6. Nach Quittierung eines Fehlers wechselt Anzeige auf Grün und Gerät ist betriebsbereit (**R5.3, R5.5**).
 
 ---
 
