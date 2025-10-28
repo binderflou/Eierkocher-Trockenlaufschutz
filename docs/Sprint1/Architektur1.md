@@ -1,8 +1,6 @@
 # Architektur 
 ## Softwarearchitektur Trockenlaufschutz 
 
-# Softwarearchitektur – Wasser-/Heizsystem
-
 ```mermaid
 graph TD
     %% Sensordatenerfassung
