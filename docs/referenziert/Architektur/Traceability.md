@@ -14,7 +14,7 @@
 | R4.1 | Plausibilitätsprüfung beim Einschalten: Temperatur 0–50 °C, Füllstand 0–100 %, Dauer ≤2 s | Steuerlogik |
 | R4.2 | Fehlerklassifizierung: Warnung (Füllstand <20 %), Fehler (Trockenlauf), Kritisch (Sensorfehler/Überhitzung), Anzeige <300 ms | Steuerlogik |
 | R4.3 | Zyklischer Selbsttest: alle 30 s, unveränderte Werte >10 s → Plausibilitätswarnung | Steuerlogik |
-| R5.1 | Füllstandsanzeige: 0–100 %, Aktualisierung alle 500 ms, Genauigkeit ±5 % | Display |
+| R5.1 | Füllstandsanzeige: 0–100 %, Aktualisierung alle 500 ms, Genauigkeit ±5 % | Display | 1 |
 | R5.2 | Warnanzeige: Farbcode (Grün/Gelb/Rot), Helligkeit <300 cd/m², Symbole bei Farbfehlsichtigkeit | Display |
 | R5.3 | Fehlermeldung bei Trockenlauf: Text, Anzeige aktiv bis quittiert | Display |
 | R5.4 | Akustische Signalisierung: 60–80 dB(A), Signaltyp 2× kurz bei Warnung, 3× lang bei Fehler, Reaktionszeit ≤500 ms | Summer |
