@@ -1,3 +1,4 @@
+````mermaid
 %% Trockenlaufschutz – Komponentendiagramm
 %% Mermaid UML Diagramm (Version 10+ empfohlen)
 
@@ -44,3 +45,5 @@ graph LR
 
     %% externe Aktoren
     CT -->|Relaissteuerung| HE[Heizelement]
+
+````
