@@ -50,6 +50,8 @@ graph TD
 | **Anzeige & Warnungen**   | Darstellung von Füllstand & Temperatur, Anzeige von Warnungen und Fehlern    | R5.1, R5.2                  |
 
 
+# Klassendiagramm
+
 ````mermaid
 classDiagram
     class SystemController {
