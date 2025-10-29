@@ -12,7 +12,7 @@ graph TD
     end
 
     %% Schicht 2: Datenverarbeitung & Zustandsüberwachung
-    subgraph Verarbeitung
+    subgraph Auswertelogik & Steuerlogik
         DAT[Sensor-Datenverarbeitung]
         SIV[Soll/Ist-Vergleich]
         STATUS[Statusverwaltung]
