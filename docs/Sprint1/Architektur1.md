@@ -48,3 +48,86 @@ graph TD
 | **Heizung**               | Aktivierung/Deaktivierung der Heizung, Umsetzung der Sicherheitsregeln      | R3.1                        |
 | **Sicherheitsmodus**      | Trockenlaufschutz, Abschaltung bei kritischen Sensorwerten                 | R3.1                        |
 | **Anzeige & Warnungen**   | Darstellung von Füllstand & Temperatur, Anzeige von Warnungen und Fehlern    | R5.1, R5.2                  |
+
+
+````mermaid
+classDiagram
+    class SystemController {
+        - SensorManager sensors
+        - StateDetector state
+        - HeaterControl heater
+        - UserInterface ui
+        + setup()
+        + loop()
+        + executeCycle()
+    }
+
+    class SensorManager {
+        - FillLevelSensor fillSensor
+        - TemperatureSensor tempSensor
+        + updateAll()
+        + validate()
+    }
+
+    class FillLevelSensor {
+        - int analogPin
+        - float levelPercent
+        + readValue()
+        + getLevel()
+    }
+
+    class TemperatureSensor {
+        - int dataPin
+        - float temperature
+        - float deltaT
+        + readTemp()
+        + calcRate()
+    }
+
+    class StateDetector {
+        - String state
+        - float level
+        - float temp
+        + determineState()
+        + getState()
+    }
+
+    class HeaterControl {
+        - int relayPin
+        - bool active
+        + switchOn()
+        + switchOff()
+        + update()
+    }
+
+    class UserInterface {
+        - Display display
+        - Buzzer buzzer
+        + updateUI()
+        + readInput()
+    }
+
+    class Display {
+        - String message
+        - int colorCode
+        + showLevel()
+        + showTemp()
+        + showWarning()
+    }
+
+    class Buzzer {
+        - int buzzerPin
+        + beepShort()
+        + beepLong()
+        + warnTone()
+    }
+
+    SystemController --> SensorManager
+    SystemController --> StateDetector
+    SystemController --> HeaterControl
+    SystemController --> UserInterface
+    SensorManager --> FillLevelSensor
+    SensorManager --> TemperatureSensor
+    UserInterface --> Display
+    UserInterface --> Buzzer
+````
