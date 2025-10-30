@@ -455,7 +455,6 @@ gemeinsam den sicherheitskritischen Fall „Trockenlauf erkannt“ verarbeiten.
 
 ---
 
-## 6. Fazit
 Das Kommunikationsdiagramm zeigt die **strukturierte Zusammenarbeit** aller Systemkomponenten:  
 - **ControlLogic** ist der zentrale Koordinator,  
 - **HardwareAbstraction** liefert Messwerte,  
@@ -464,8 +463,3 @@ Das Kommunikationsdiagramm zeigt die **strukturierte Zusammenarbeit** aller Syst
 
 Diese Architektur gewährleistet **klare Schnittstellen, hohe Testbarkeit** und erfüllt alle sicherheitsrelevanten Anforderungen  
 zum **Trockenlaufschutz (R3.1–R3.3)** aus dem Pflichtenheft.
-
-
-Die folgende Tabelle zeigt die Zerlegung der Architektur-Ebenen (Sensorik, Auswertelogik, Steuerlogik, Benutzerinterface)  
-in kleinere Software-Design-Komponenten.  
-Diese Beschreibung erfolgt **ohne objektorientierte Modellierung** (also nur Funktionsblöcke).
