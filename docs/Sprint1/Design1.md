@@ -1,6 +1,12 @@
 # Design
+## Klassendiagramm
 
 ![Klassendiagramm](../referenziert/Design/KlassendiagrammSoftwareEngineering.png)
+
+## Sequenzdiagramm
+
+![Sequenzdiagramm](../referenziert/Design/SequenzdiagrammSoftwareEngineering.png)
+
 
 
 
