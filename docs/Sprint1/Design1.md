@@ -3,8 +3,6 @@
 
 ![Klassendiagramm](../referenziert/Design/KlassendiagrammSoftwareEngineering.png)
 
-# 🧩 Klassendiagramm – Trockenlaufschutz für Eierkocher
-
 ## 1. Zweck des Klassendiagramms
 Das Klassendiagramm beschreibt die objektorientierte Struktur der Software für den **Trockenlaufschutz eines Eierkochers**.  
 Es dient der logischen Modellierung aller wesentlichen Systemkomponenten und stellt deren **Verantwortlichkeiten, Attribute, Methoden und Beziehungen** dar.  
