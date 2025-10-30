@@ -265,8 +265,6 @@ Die Software besteht aus vier Hauptschichten mit den zugehörigen Klassen:
 
 ---
 
-## 6. Fazit
-
 Das Klassendiagramm gewährleistet eine **klare Trennung der Verantwortlichkeiten** und eine **testbare modulare Struktur**.  
 Durch die Schichtenarchitektur ist das System:
 - **erweiterbar** (z. B. Bluetooth-Diagnose, Logging),
@@ -280,6 +278,114 @@ Damit erfüllt die Architektur die funktionalen und nicht-funktionalen Anforderu
 ## Sequenzdiagramm
 
 ![Sequenzdiagramm](../referenziert/Design/SequenzdiagrammSoftwareEngineering.png)
+
+## 1. Zweck des Sequenzdiagramms
+
+Das Sequenzdiagramm stellt den **Ablauf der Kommunikation zwischen den Systemkomponenten** während eines Trockenlauf-Ereignisses dar.  
+Es visualisiert den **zeitlichen Ablauf** der Interaktionen zwischen **Benutzer, Steuerlogik, Sensorik, Anzeige- und Sicherheitssystemen**, um zu zeigen, wie das System auf einen kritischen Zustand reagiert.
+
+Das Diagramm dient der **Überprüfung der Funktionslogik** und stellt sicher,  
+dass alle Anforderungen aus dem Pflichtenheft, insbesondere die unter **R3.1–R3.3 (Trockenlaufschutz und Sicherheitsabschaltung)**, korrekt umgesetzt sind.
+
+---
+
+## 2. Beteiligte Objekte / Akteure
+
+| **Objekt / Akteur** | **Beschreibung** |
+|----------------------|------------------|
+| **Benutzer** | Startet das Gerät und quittiert Fehlermeldungen. |
+| **DisplayController (UI)** | Zeigt aktuelle Zustände, Warnungen und Fehlermeldungen an. |
+| **SystemController (Control Logic)** | Zentrale Steuerung; koordiniert alle Komponenten und Abläufe. |
+| **SafetyManager (Control Logic)** | Überprüft Sensorwerte auf Trockenlaufbedingungen und führt Sicherheitsabschaltungen aus. |
+| **FillLevelSensor (Hardware)** | Erfasst den aktuellen Wasserstand. |
+| **TemperatureSensor (Hardware)** | Misst die Temperatur der Heizplatte. |
+| **HeaterControl (Hardware)** | Steuert das Heizelement (An/Aus). |
+| **BuzzerController (UI)** | Gibt akustische Warnungen oder Fehlertöne aus. |
+| **SettingsStorage (Persistence)** | Speichert Fehlerereignisse und Systemparameter. |
+
+---
+
+## 3. Ablaufbeschreibung
+
+### 3.1 Initialisierung
+1. Der **Benutzer** schaltet das Gerät ein.  
+2. Der **DisplayController** zeigt den Startbildschirm.  
+3. Der **SystemController** lädt über den **SettingsStorage** die gespeicherten Schwellenwerte und Kalibrierungsdaten.  
+4. Alle Sensoren werden initialisiert, und das System geht in den Zustand **"Bereit"** über.
+
+---
+
+### 3.2 Zyklische Sensordatenerfassung
+1. Der **SystemController** ruft regelmäßig (alle 200 ms) die Werte des **FillLevelSensor** und **TemperatureSensor** ab.  
+2. Diese Messwerte werden gefiltert und an den **SafetyManager** übergeben.  
+3. Der **SafetyManager** berechnet die Änderungsrate der Temperatur (ΔT/Δt) und überprüft den Füllstand.  
+
+---
+
+### 3.3 Trockenlauf-Erkennung
+1. Wird erkannt, dass der **Füllstand < 10 %** ist **oder** die Temperatur **mehr als 5 °C/s** steigt, meldet der **SafetyManager** einen Trockenlauf an den **SystemController**.  
+2. Der **SystemController** löst sofort folgende Aktionen aus:
+   - Abschalten der Heizung über den **HeaterControl** (`switchOff()`).
+   - Anzeige der Fehlermeldung „Trockenlauf erkannt“ über den **DisplayController**.
+   - Akustisches Signal (3× langer Ton) über den **BuzzerController**.
+   - Loggen des Ereignisses im **SettingsStorage**.
+
+---
+
+### 3.4 Benutzerquittierung
+1. Der **Benutzer** betätigt die Taste „OK“, um die Fehlermeldung zu quittieren.  
+2. Der **InputHandler** meldet die Eingabe an den **SystemController**.  
+3. Der **SystemController** löscht die Anzeige, schaltet das Heizelement wieder frei und wechselt in den Zustand **"Bereit"**.  
+
+---
+
+## 4. Zeitliche Abfolge (Kurzbeschreibung)
+
+| **Schritt** | **Aktion** | **Beteiligte Komponenten** |
+|--------------|-------------|-----------------------------|
+| 1 | Systemstart | Benutzer, DisplayController, SystemController |
+| 2 | Laden von Kalibrierungsdaten | SystemController, SettingsStorage |
+| 3 | Sensordaten erfassen | FillLevelSensor, TemperatureSensor |
+| 4 | Trockenlauf erkennen | SafetyManager |
+| 5 | Sicherheitsabschaltung | HeaterControl |
+| 6 | Fehleranzeige & Warnsignal | DisplayController, BuzzerController |
+| 7 | Ereignis speichern | SettingsStorage |
+| 8 | Fehlerquittierung durch Benutzer | InputHandler, SystemController |
+
+---
+
+## 5. Fehlerbehandlung und Sicherheitslogik
+
+- Die **Abschaltung** erfolgt **innerhalb von ≤ 1 s** nach Erkennung der Trockenlaufbedingung.  
+- Bei Sensorausfall oder unplausiblen Werten wird der gleiche Sicherheitsmechanismus ausgelöst.  
+- Der **SafetyManager** arbeitet nach dem **Fail-Safe-Prinzip**:  
+  Jede Unsicherheit führt zu einem sicheren Zustand (Heizung aus, Warnung aktiv).  
+- Nach erfolgreicher Quittierung wird der **Normalbetrieb** automatisch wieder aufgenommen.
+
+---
+
+## 6. Bezug zu Requirements
+
+| **Requirement-ID** | **Beschreibung** | **Abgebildet durch** |
+|--------------------|------------------|----------------------|
+| **R3.1** | Trockenlaufabschaltung bei Füllstand < 10 % oder Temperaturanstieg > 5 °C/s | SafetyManager, SystemController |
+| **R3.2** | Warnanzeige & akustisches Signal bei Trockenlauf | DisplayController, BuzzerController |
+| **R3.3** | Speicherung des Fehlers und Reaktivierung nach Quittierung | SettingsStorage, InputHandler |
+| **R4.2** | Fehlerklassifizierung und Sicherheitsreaktion | SafetyManager |
+| **R5.1–R5.4** | Benutzerinteraktion & Anzeige | UserInterface-Komponenten |
+
+---
+
+Das Sequenzdiagramm verdeutlicht, wie der **Trockenlaufschutz** technisch abläuft und welche Komponenten beteiligt sind.  
+Durch den klar strukturierten Ablauf wird sichergestellt, dass:
+
+- Sicherheitsfunktionen **deterministisch und zeitnah** ausgeführt werden,  
+- alle Systemzustände für den Benutzer **verständlich visualisiert** sind,  
+- das System **robust und fehlertolerant** auf Sensorfehler reagiert,  
+- und das Verhalten den **funktionalen Anforderungen (R1–R5)** aus dem Pflichtenheft vollständig entspricht.
+
+Damit dient das Sequenzdiagramm als **Beleg der dynamischen Systemarchitektur** und zeigt die **Interaktion zwischen Softwaremodulen und Hardware** während des sicherheitskritischen Betriebsfalls.
+
 
 ## Kommunikationsdiagramm
 
