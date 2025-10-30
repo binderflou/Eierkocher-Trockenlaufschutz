@@ -7,7 +7,9 @@
 
 ![Sequenzdiagramm](../referenziert/Design/SequenzdiagrammSoftwareEngineering.png)
 
+## Kommunikationsdiagramm
 
+![Kommunikationsdiagramm](../referenziert/Design/Kommunikationsdiagramm1.png)
 
 
 # Softwarearchitektur – Design-Komponenten
