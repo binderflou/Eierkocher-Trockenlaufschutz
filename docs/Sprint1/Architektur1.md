@@ -51,11 +51,10 @@
 | ----------------------- | -------------------------------- | ----------------------------------------------------------------- |
 | **Programmiersprache**  | C / C++ (Arduino-Umgebung)       | Direkter Zugriff auf Sensoren und Aktoren, gute Echtzeitfähigkeit |
 | **Buildsystem**         | Arduino IDE / PlatformIO         | Integrierte Toolchain für Mikrocontroller, einfache Handhabung    |
-| **Versionskontrolle**   | Git + GitHub                     | Standardlösung für kollaborative Softwareentwicklung              |
-| **Dokumentation**       | Markdown + Mermaid / draw.io     | Einheitliche Dokumentation im Repository, visuelle Diagramme      |
+| **Versionskontrolle**   | GitHub                           | Standardlösung für kollaborative Softwareentwicklung              |
+| **Dokumentation**       | Markdown + Mermaid / drawio      | Einheitliche Dokumentation im Repository, visuelle Diagramme      |
 | **Test-Framework**      | Unity / GoogleTest (optional)    | Unterstützung von Unit- und Integrationstests                     |
-| **IDE**                 | VS Code / Arduino IDE            | Schlanke Entwicklungsumgebung mit serieller Schnittstelle         |
-| **Analyse / Debugging** | Serieller Monitor / UART-Logging | Echtzeitüberwachung von Sensorwerten und Zuständen                |
+| **IDE**                 | VS Code / Arduino IDE            | Schlanke Entwicklungsumgebung, Erfahrungen                        |
 | **Ausgabe**             | OLED-Display + Summer            | Visuelle und akustische Benutzerinformation                       |
 
 
