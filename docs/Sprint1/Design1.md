@@ -391,63 +391,80 @@ Damit dient das Sequenzdiagramm als **Beleg der dynamischen Systemarchitektur** 
 
 ![Kommunikationsdiagramm](../referenziert/Design/Kommunikationsdiagramm1.png)
 
+## 1. Ziel des Diagramms
+Das Kommunikationsdiagramm zeigt die **Interaktion und Nachrichtenflüsse** zwischen den Hauptkomponenten des Systems  
+während eines **Trockenlauf-Ereignisses**.  
+Im Gegensatz zum Sequenzdiagramm steht hier nicht die zeitliche Reihenfolge,  
+sondern die **kommunikative Verknüpfung** der Module im Vordergrund.  
+Es verdeutlicht, wie die Schichten **UserInterface**, **ControlLogic**, **HardwareAbstraction** und **PersistenceManager**  
+gemeinsam den sicherheitskritischen Fall „Trockenlauf erkannt“ verarbeiten.
 
-# Softwarearchitektur – Design-Komponenten
+---
 
-```mermaid
-graph TD
-    %% Schicht 1: Sensordatenerfassung
-    subgraph Sensordatenerfassung
-        FILL[Füllstandsmessung]
-        TEMP[Temperaturmessung]
-        TIME[Zeitgeber]
-    end
+## 2. Beteiligte Komponenten
 
-    %% Schicht 2: Datenverarbeitung & Zustandsüberwachung
-    subgraph Auswerte-Steuerlogik
-        DAT[Sensor-Datenverarbeitung]
-        SIV[Soll/Ist-Vergleich]
-        STATUS[Statusverwaltung]
-    end
+| **Komponente** | **Rolle / Funktion** |
+|----------------|----------------------|
+| **User (Aktor)** | Startet und quittiert den Prozess (z. B. Einschalten, OK-Taste). |
+| **UserInterface (Display & Buzzer)** | Visualisiert Warnungen, zeigt Fehler an und gibt akustische Signale aus. |
+| **ControlLogic (SystemController & SafetyManager)** | Zentrale Steuerung, Zustandsüberwachung und Sicherheitsabschaltung. |
+| **HardwareAbstraction (Sensorik & Heizung)** | Liest Sensordaten aus (Füllstand, Temperatur) und schaltet die Heizung. |
+| **PersistenceManager (Datenspeicherung)** | Speichert Schwellenwerte, Kalibrierungen und Fehlerhistorie. |
 
-    %% Schicht 3: Steuerlogik & Sicherheit
-    subgraph Steuerung
-        HEAT[Heizungssteuerung]
-        SAFETY[Trockenlaufschutz/Sicherheitsmodus]
-    end
+---
 
-    %% Schicht 4: Benutzerinterface
-    subgraph UI
-        DISPLAY_FILL[Füllstandsanzeige]
-        DISPLAY_TEMP[Temperaturanzeige]
-        WARN[Warn- & Fehlermeldung]
-    end
+## 3. Ablaufbeschreibung
 
-    %% Schicht 5: Test & Diagnose
-    subgraph Test_und_Diagnose
-        SELFTEST[Selbsttest & Plausibilitätsprüfung]
-        ERROR[Fehleranalyse]
-    end
+1. **Initialisierung:**  
+   Der Benutzer schaltet das Gerät ein.  
+   → `UserInterface` informiert die `ControlLogic`, welche über den `PersistenceManager` gespeicherte Einstellungen lädt.  
 
-    %% Datenflüsse zwischen den Komponenten
-    FILL --> DAT
-    TEMP --> DAT
-    TIME --> DAT
-    DAT --> SIV
-    SIV --> STATUS
-    STATUS --> HEAT
-    STATUS --> SAFETY
-    STATUS --> DISPLAY_FILL
-    STATUS --> DISPLAY_TEMP
-    STATUS --> WARN
-    SELFTEST --> DAT
-    SELFTEST --> SIV
-    SELFTEST --> WARN
-    ERROR --> STATUS
-    ERROR --> WARN
-````
+2. **Sensordatenerfassung:**  
+   `ControlLogic` fragt über `HardwareAbstraction` die Sensoren ab (Füllstand, Temperatur).  
 
-# Software-Design-Komponenten
+3. **Trockenlauf-Erkennung:**  
+   Der `SafetyManager` innerhalb der `ControlLogic` erkennt den Trockenlauf (Füllstand < 10 % oder Temperaturanstieg > 5 °C/s).  
+   → Heizung wird deaktiviert, Warnungen und Töne werden aktiviert, Ereignis wird gespeichert.  
+
+4. **Benutzerinteraktion:**  
+   Der Benutzer bestätigt den Fehler über die Taste **OK**.  
+   → Anzeige wird gelöscht, System kehrt in den Zustand „Bereit“ zurück, Heizung wird wieder freigegeben.
+
+---
+
+## 4. Kommunikationsstruktur (Kurzüberblick)
+
+| **Absender** | **Empfänger** | **Nachricht / Aktion** |
+|---------------|----------------|-------------------------|
+| `User` | `UserInterface` | Gerät einschalten / Taste OK drücken |
+| `UserInterface` | `ControlLogic` | `initSystem()`, `acknowledgeError()` |
+| `ControlLogic` | `PersistenceManager` | `loadSettings()`, `logEvent()` |
+| `ControlLogic` | `HardwareAbstraction` | `readFillLevel()`, `readTemperature()`, `switchOffHeater()` |
+| `ControlLogic` | `UserInterface` | `displayWarning()`, `playErrorTone()`, `clearDisplay()` |
+
+---
+
+## 5. Bezug zu Requirements
+
+| **Requirement-ID** | **Abgebildet durch Kommunikation zwischen** | **Beschreibung** |
+|--------------------|----------------------------------------------|------------------|
+| **R1.1–R1.2** | ControlLogic ↔ HardwareAbstraction | Erfassen von Füllstand und Temperatur |
+| **R2.1–R3.3** | ControlLogic ↔ SafetyManager ↔ UI | Zustandslogik und Trockenlaufabschaltung |
+| **R4.1–R4.3** | ControlLogic ↔ PersistenceManager | Selbsttest, Kalibrierung, Fehlerlogging |
+| **R5.1–R5.5** | User ↔ UI ↔ ControlLogic | Anzeige, Warnsignale, Benutzerquittierung |
+
+---
+
+## 6. Fazit
+Das Kommunikationsdiagramm zeigt die **strukturierte Zusammenarbeit** aller Systemkomponenten:  
+- **ControlLogic** ist der zentrale Koordinator,  
+- **HardwareAbstraction** liefert Messwerte,  
+- **UserInterface** meldet Zustände an den Benutzer,  
+- **PersistenceManager** sichert Daten dauerhaft.  
+
+Diese Architektur gewährleistet **klare Schnittstellen, hohe Testbarkeit** und erfüllt alle sicherheitsrelevanten Anforderungen  
+zum **Trockenlaufschutz (R3.1–R3.3)** aus dem Pflichtenheft.
+
 
 Die folgende Tabelle zeigt die Zerlegung der Architektur-Ebenen (Sensorik, Auswertelogik, Steuerlogik, Benutzerinterface)  
 in kleinere Software-Design-Komponenten.  
