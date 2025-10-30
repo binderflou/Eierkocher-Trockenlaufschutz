@@ -1,5 +1,9 @@
 # Design
 
+![Klassendiagramm](../referenziert/Design/KlassendiagrammSoftwareEngineering.png)
+
+
+
 # Softwarearchitektur – Design-Komponenten
 
 ```mermaid
