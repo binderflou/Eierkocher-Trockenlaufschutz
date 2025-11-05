@@ -463,3 +463,69 @@ Das Kommunikationsdiagramm zeigt die **strukturierte Zusammenarbeit** aller Syst
 
 Diese Architektur gewährleistet **klare Schnittstellen, hohe Testbarkeit** und erfüllt alle sicherheitsrelevanten Anforderungen  
 zum **Trockenlaufschutz (R3.1–R3.3)** aus dem Pflichtenheft.
+
+## Design Pattern
+
+## 1. Model-View-Controller (MVC)
+
+**Art:** Architektur-Pattern  
+**Verwendung:** Zentrales Entwurfsmuster des Systems
+
+### Beschreibung
+Das gesamte System folgt dem **MVC-Prinzip**, um **Darstellung, Logik und Hardwarezugriff klar zu trennen**.
+
+| Schicht | Komponenten / Klassen | Aufgabe |
+|----------|-----------------------|----------|
+| **Model** | `SystemController`, `SafetyManager`, `StateDetector`, `FillLevelSensor`, `TemperatureSensor`, `HeaterControl` | Verwaltung von Zuständen, Logik und Sensordaten |
+| **View** | `DisplayController`, `BuzzerController` | Darstellung von Systemzuständen, Warnungen und Fehlern |
+| **Controller** | `InputHandler`, `SystemController` | Vermittlung zwischen Benutzerinteraktion, Anzeige und Logik |
+
+### Vorteile
+- Klare Trennung der Verantwortlichkeiten  
+- Einfach test- und wartbar  
+- Erweiterbar (z. B. neue Anzeige oder neue Sensoren)
+
+---
+
+## 2. Singleton
+
+**Art:** Erzeugungs-Pattern  
+**Verwendung:** In der Klasse `SystemController`
+
+### Beschreibung
+Der `SystemController` ist als **Singleton** konzipiert, da nur **eine Instanz** im gesamten System existieren darf.  
+Er steuert den Ablauf, verwaltet Sensor- und Logikkomponenten und koordiniert alle Subsysteme.
+
+### Vorteile
+- Zentrale Steuerinstanz  
+- Einheitlicher Zugriff auf Systemstatus  
+- Vermeidung von Mehrfachinstanzen und widersprüchlichen Zuständen
+
+---
+
+## 3. Command
+
+**Art:** Verhaltens-Pattern  
+**Verwendung:** Konzeptuell in `InputHandler` vorbereitet
+
+### Beschreibung
+Das Command-Pattern ist vorbereitet, um Benutzeraktionen als **Befehle** zu kapseln.  
+So könnte z. B. ein Tastendruck (`OK`) als eigenes Kommando-Objekt (`AcknowledgeErrorCommand`) umgesetzt werden.  
+Dieses kann unabhängig von der Steuerlogik ausgeführt oder erweitert werden.
+
+### Vorteile
+- Entkopplung von Eingabe und Logik  
+- Leichte Erweiterbarkeit (neue Befehle, z. B. Reset, Diagnose)  
+- Saubere Trennung von Event-Verarbeitung und Systemreaktion
+
+---
+
+## Zusammenfassung
+
+| **Design Pattern** | **Art** | **Verwendet in** | **Zweck / Nutzen** |
+|--------------------|----------|------------------|--------------------|
+| **Model-View-Controller (MVC)** | Architekturpattern | Gesamtsystem | Strukturierte Trennung von Logik, UI und Hardware |
+| **Singleton** | Erzeugungsmuster | `SystemController` | Zentrale Steuerinstanz, nur eine Systemlogik-Instanz |
+| **Command** | Verhaltensmuster (optional) | `InputHandler` | Entkopplung von Benutzerinteraktion und Steuerlogik |
+
+---
