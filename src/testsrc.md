@@ -60,7 +60,9 @@ Eierkocher-Trockenlaufschutz/
 │
 └── README.md                            # Projektübersicht, Build-Hinweise
 
+# 🧩 Modulstruktur – Trockenlaufschutz für Eierkocher
 
+```mermaid
 %%==========================================
 %% Modulstruktur – Trockenlaufschutz für Eierkocher
 %%==========================================
