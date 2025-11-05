@@ -1,10 +1,10 @@
 Eierkocher-Trockenlaufschutz/
 │
-├── src/
+├── src/                                 # Quellcode des Projekts
 │   │
-│   ├── main.cpp                         # Einstiegspunkt (setup/loop)
+│   ├── main.cpp                         # Einstiegspunkt (setup / loop)
 │   │
-│   ├── UserInterface/                   # UI-Komponente
+│   ├── UserInterface/                   # Benutzeroberfläche
 │   │   ├── DisplayController.cpp
 │   │   ├── DisplayController.h
 │   │   ├── BuzzerController.cpp
@@ -12,7 +12,7 @@ Eierkocher-Trockenlaufschutz/
 │   │   ├── InputHandler.cpp
 │   │   ├── InputHandler.h
 │   │
-│   ├── Steuerungslogik/                 # Zentrale Logik-Komponente
+│   ├── Steuerungslogik/                 # Hauptsteuerung & Sicherheitslogik
 │   │   ├── SystemController.cpp
 │   │   ├── SystemController.h
 │   │   ├── SafetyManager.cpp
@@ -22,7 +22,7 @@ Eierkocher-Trockenlaufschutz/
 │   │   ├── ThresholdManager.cpp
 │   │   ├── ThresholdManager.h
 │   │
-│   ├── HardwareAbstraction/             # Hardwarezugriff & Sensorik
+│   ├── HardwareAbstraction/             # Sensorik & Aktorik
 │   │   ├── FillLevelSensor.cpp
 │   │   ├── FillLevelSensor.h
 │   │   ├── TemperatureSensor.cpp
@@ -32,23 +32,23 @@ Eierkocher-Trockenlaufschutz/
 │   │   ├── TimerService.cpp
 │   │   ├── TimerService.h
 │   │
-│   ├── PersistenceManager/              # Speicherung, Kalibrierung
+│   ├── PersistenceManager/              # Datenspeicherung & Kalibrierung
 │   │   ├── SettingsStorage.cpp
 │   │   ├── SettingsStorage.h
 │   │   ├── CalibrationData.cpp
 │   │   ├── CalibrationData.h
 │   │
-│   └── utils/                           # Optional: Logging, Debug, Tools
+│   └── utils/                           # Hilfsfunktionen / Logging
 │       ├── Logger.cpp
 │       ├── Logger.h
 │
-├── test/                                # Testcode pro Komponente
+├── test/                                # Unit- und Integrationstests
 │   ├── test_UserInterface.cpp
 │   ├── test_Steuerungslogik.cpp
 │   ├── test_HardwareAbstraction.cpp
 │   ├── test_PersistenceManager.cpp
 │
-├── diagrams/                            # UML-Diagramme & Architektur
+├── diagrams/                            # UML- und Architekturdiagramme
 │   ├── Klassendiagramm.puml
 │   ├── Kommunikationsdiagramm.puml
 │   ├── Sequenzdiagramm_Trockenlauf.puml
@@ -59,4 +59,3 @@ Eierkocher-Trockenlaufschutz/
 │   ├── TraceabilityMatrix.md
 │
 └── README.md                            # Projektübersicht, Build-Hinweise
-
