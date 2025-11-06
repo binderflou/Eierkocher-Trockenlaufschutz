@@ -487,14 +487,10 @@ Das gesamte System folgt dem **MVC-Prinzip**, um **Darstellung, Logik und Hardwa
 
 ---
 
-## 2. Singleton
+## 1. Singleton
 
 **Art:** Erzeugungs-Pattern  
-**Verwendung:** In der Klasse `SystemController`
-
-### Beschreibung
-Der `SystemController` ist als **Singleton** konzipiert, da nur **eine Instanz** im gesamten System existieren darf.  
-Er steuert den Ablauf, verwaltet Sensor- und Logikkomponenten und koordiniert alle Subsysteme.
+**Verwendung:** In der Klasse `SystemController`,  `SafetyManager`, `StateDetector`
 
 ### Vorteile
 - Zentrale Steuerinstanz  
@@ -503,7 +499,14 @@ Er steuert den Ablauf, verwaltet Sensor- und Logikkomponenten und koordiniert al
 
 ---
 
-## 3. Command
+| Klasse             | Aufgabe                                    | Grund für Singleton                                     |
+| ------------------ | ------------------------------------------ | ------------------------------------------------------- |
+| `SystemController` | Zentrale Ablaufsteuerung und Koordination  | Nur eine Systeminstanz darf steuern                     |
+| `SafetyManager`    | Sicherheitsüberwachung und Abschaltung     | Nur eine Instanz darf Sicherheitsentscheidungen treffen |
+| `StateDetector`    | Zustandsanalyse und Systemstatus-Erkennung | Einheitlicher, globaler Systemzustand erforderlich      |
+
+
+## 2. Command
 
 **Art:** Verhaltens-Pattern  
 **Verwendung:** Konzeptuell in `InputHandler` vorbereitet
@@ -517,15 +520,5 @@ Dieses kann unabhängig von der Steuerlogik ausgeführt oder erweitert werden.
 - Entkopplung von Eingabe und Logik  
 - Leichte Erweiterbarkeit (neue Befehle, z. B. Reset, Diagnose)  
 - Saubere Trennung von Event-Verarbeitung und Systemreaktion
-
----
-
-## Zusammenfassung
-
-| **Design Pattern** | **Art** | **Verwendet in** | **Zweck / Nutzen** |
-|--------------------|----------|------------------|--------------------|
-| **Model-View-Controller (MVC)** | Architekturpattern | Gesamtsystem | Strukturierte Trennung von Logik, UI und Hardware |
-| **Singleton** | Erzeugungsmuster | `SystemController` | Zentrale Steuerinstanz, nur eine Systemlogik-Instanz |
-| **Command** | Verhaltensmuster (optional) | `InputHandler` | Entkopplung von Benutzerinteraktion und Steuerlogik |
 
 ---
