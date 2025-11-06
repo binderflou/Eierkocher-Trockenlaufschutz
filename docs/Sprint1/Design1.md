@@ -389,7 +389,7 @@ Damit dient das Sequenzdiagramm als **Beleg der dynamischen Systemarchitektur** 
 
 ## Kommunikationsdiagramm
 
-![Kommunikationsdiagramm](../referenziert/Design/Kommunikationsdiagramm1.png)
+![Kommunikationsdiagramm](../referenziert/Design/Kommunikationsdiagramm2.png)
 
 ## 1. Ziel des Diagramms
 Das Kommunikationsdiagramm zeigt die **Interaktion und Nachrichtenflüsse** zwischen den Hauptkomponenten des Systems  
