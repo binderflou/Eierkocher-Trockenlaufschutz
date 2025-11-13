@@ -14,13 +14,25 @@ TemperatureSensor::TemperatureSensor(
 float TemperatureSensor::readTemperature() {
     if (timerService && timerService->elapsed(50)) {
         lastTemperature = temperature;
-        temperature += 0.5f;
+        
+        // Ziel: in 3 Sekunden auf 100°C
+        if (temperature < 100.0f) {
+            temperature += 25.0f; // 80°C / 60 Schritte
+            if (temperature > 100.0f) {
+                temperature = 100.0f; // Clamp
+            }
+        }
+        
+        //temperature += 0.5f;
     }
     return temperature;
+}
+
+void TemperatureSensor::resetTemperature() {
+    temperature = 20.0f;
+    lastTemperature = 20.0f;
 }
 
 float TemperatureSensor::getDeltaT() const { return temperature - lastTemperature; }
 
 } // namespace hardware
-
-//test

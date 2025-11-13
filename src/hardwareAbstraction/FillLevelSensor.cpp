@@ -13,7 +13,14 @@ FillLevelSensor::FillLevelSensor(int analogPin,
 
 int FillLevelSensor::readLevel() {
     if (timerService && timerService->elapsed(50)) {
-        fillLevelPercent = (fillLevelPercent + 5) % 105;
+        if (fillLevelPercent == 0) {
+            // Tank wieder füllen, wenn leer, Reset
+            fillLevelPercent = 100;
+        }
+        else {
+            fillLevelPercent -= 5; // oder -2, -5, je nach gewünschter Geschwindigkeit
+        }
+
         valid = true;
     }
     return fillLevelPercent;

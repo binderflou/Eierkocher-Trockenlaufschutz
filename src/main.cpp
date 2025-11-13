@@ -21,11 +21,11 @@ int main() {
     std::cout << "\n=== Eierkocher Trockenlauf-Simulation ===\n";
     std::cout << "Initialisiere Komponenten..." << std::endl;
 
-    auto timerService = std::make_shared<hardware::TimerService>();
-
+    auto timerServiceFill = std::make_shared<hardware::TimerService>();
+    auto timerServiceTemp = std::make_shared<hardware::TimerService>();
     // Die Hardware-Klassen simulieren interne Werte. Konkrete Pins werden nicht benötigt.
-    hardware::FillLevelSensor fillLevelSensor(0, timerService);
-    hardware::TemperatureSensor temperatureSensor(0, timerService);
+    hardware::FillLevelSensor fillLevelSensor(0, timerServiceFill);
+    hardware::TemperatureSensor temperatureSensor(0, timerServiceTemp);
     hardware::HeaterControl heaterControl(0);
 
     ui::DisplayController displayController;

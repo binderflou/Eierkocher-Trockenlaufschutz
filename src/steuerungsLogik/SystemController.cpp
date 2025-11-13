@@ -34,7 +34,14 @@ SystemController::SystemController(
 void SystemController::executeCycle() {
     int fillLevel = fillSensor.readLevel();
     float temperature = tempSensor.readTemperature();
-    updateSystemState();
+   
+    if (fillLevel <= 5 && lastFillLevel > 5) {
+        tempSensor.resetTemperature();
+    }
+
+    lastFillLevel = fillLevel;
+
+    updateSystemState(fillLevel, temperature);
 
     if (safetyManager.checkDryRun(fillLevel, tempSensor.getDeltaT())) {
         safetyManager.emergencyShutdown(heater);
@@ -62,9 +69,10 @@ void SystemController::executeCycle() {
     }
 }
 
-void SystemController::updateSystemState() {
-    int fillLevel = fillSensor.readLevel();
-    float temperature = tempSensor.readTemperature();
+void SystemController::updateSystemState(int fillLevel, float temperature) {
+    //int fillLevel = fillSensor.readLevel();
+    //float temperature = tempSensor.readTemperature();
+    //stateDetector.detectState(fillLevel, temperature);
     stateDetector.detectState(fillLevel, temperature);
 }
 

@@ -12,6 +12,7 @@ public:
                                std::shared_ptr<TimerService> timerService);
 
     float readTemperature();
+    void resetTemperature();
     float getDeltaT() const;
 
 private:

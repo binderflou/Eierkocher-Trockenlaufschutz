@@ -9,7 +9,7 @@ void DisplayController::updateDisplay(int fillLevel, int temperature,
                                       const std::string &status) {
     fillLevelDisplay = fillLevel;
     temperatureDisplay = temperature;
-    warningMessage = status;
+    //warningMessage = status;
 }
 
 void DisplayController::showWarning(const std::string &message) {

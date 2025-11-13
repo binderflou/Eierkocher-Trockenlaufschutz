@@ -38,7 +38,7 @@ public:
                      persistence::SettingsStorage &settingsStorage);
 
     void executeCycle();
-    void updateSystemState();
+    void updateSystemState(int fillLevel, float temperature);
     void handleError(int errorCode);
 
 private:
@@ -52,6 +52,7 @@ private:
     SafetyManager &safetyManager;
     ThresholdManager &thresholdManager;
     persistence::SettingsStorage &settingsStorage;
+    int lastFillLevel = 100;
 };
 
 } // namespace logic
