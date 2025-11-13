@@ -43,7 +43,7 @@ int main() {
                                        stateDetector, safetyManager,
                                        thresholdManager, settingsStorage);
 
-    std::cout << "Simulation gestartet. Drücken Sie Strg+C zum Beenden." << std::endl;
+    std::cout << "Simulation gestartet. Druecken Sie Strg+C zum Beenden." << std::endl;
 
     int cycle = 0;
     std::string previousWarning;
@@ -61,7 +61,7 @@ int main() {
         bool heaterState = heaterControl.getStatus();
         bool buzzerState = buzzerController.isPlaying();
 
-        std::cout << "[Zyklus " << cycle++ << "] Füllstand: " << currentFillLevel
+        std::cout << "[Zyklus " << cycle++ << "] Fuellstand: " << currentFillLevel
                   << "% | Temperatur: " << currentTemperature
                   << "°C | Zustand: " << currentState
                   << " | Heizung: " << (heaterState ? "AN" : "AUS");
@@ -87,7 +87,7 @@ int main() {
         }
 
         if (currentState != previousState) {
-            std::cout << "  -> Systemzustand geändert zu '" << currentState
+            std::cout << "  -> Systemzustand geaendert zu '" << currentState
                       << "'" << std::endl;
             previousState = currentState;
         }
@@ -105,7 +105,7 @@ int main() {
             previousBuzzerState = buzzerState;
         }
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(200));
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     }
 
     return 0;

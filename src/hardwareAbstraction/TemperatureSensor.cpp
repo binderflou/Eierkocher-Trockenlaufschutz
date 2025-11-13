@@ -23,3 +23,4 @@ float TemperatureSensor::getDeltaT() const { return temperature - lastTemperatur
 
 } // namespace hardware
 
+//test
