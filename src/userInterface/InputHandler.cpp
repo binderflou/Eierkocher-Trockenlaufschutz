@@ -6,6 +6,7 @@ InputHandler::InputHandler(int buttonPin)
     : buttonPin(buttonPin), buttonState(false) {}
 
 bool InputHandler::readInput() {
+    // In der Simulation wird der Tastenzustand bei jedem Aufruf umgeschaltet.
     buttonState = !buttonState;
     return buttonState;
 }

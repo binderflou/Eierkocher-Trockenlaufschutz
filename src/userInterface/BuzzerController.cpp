@@ -1,5 +1,5 @@
 #include "BuzzerController.h"
-
+    
 namespace ui {
 
 BuzzerController::BuzzerController(int buzzerPin)
@@ -11,6 +11,7 @@ void BuzzerController::playErrorTone() { playing = true; }
 
 void BuzzerController::stopTone() { playing = false; }
 
+// Gibt den aktuellen Simulationszustand zurück.
 bool BuzzerController::isPlaying() const { return playing; }
 
 } // namespace ui

@@ -24,6 +24,12 @@ class StateDetector;
 class SafetyManager;
 class ThresholdManager;
 
+/**
+ * @brief Zentrale Steuerungsklasse des Systems.
+ *
+ * Der SystemController koordiniert das Zusammenspiel von
+ * Sensoren, Safety-Logik, Zustandsdetektion, Anzeige und Benutzerinteraktionen.
+ */
 class SystemController {
 public:
     SystemController(hardware::FillLevelSensor &fillSensor,
@@ -37,8 +43,27 @@ public:
                      ThresholdManager &thresholdManager,
                      persistence::SettingsStorage &settingsStorage);
 
+    /**
+    * @brief Führt einen Steuerungszyklus aus.
+    *
+    * - Sensorwerte lesen
+    * - Zustände aktualisieren
+    * - Safety-Funktionen prüfen (Trockenlauf etc.)
+    * - Heizung / Buzzer / Display steuern
+    */
     void executeCycle();
+    
+    /**
+    * @brief Aktualisiert den logischen Systemzustand anhand aktueller Werte
+    *
+    * @param fillLevel   Aktueller Füllstand
+    * @param temperature Aktuelle Temperatur
+    */
     void updateSystemState(int fillLevel, float temperature);
+    
+    /**
+     * @brief Fehlerbehandlung
+     */
     void handleError(int errorCode);
 
 private:

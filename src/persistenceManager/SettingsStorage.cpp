@@ -7,10 +7,13 @@
 namespace persistence {
 
 SettingsStorage::SettingsStorage()
+// Defaultwerte werden gesetzt, bevor loadSettings sie überschreibt.
     : warningThreshold(20), criticalThreshold(5),
       calibration(std::make_unique<CalibrationData>()) {}
 
 void SettingsStorage::loadSettings() {
+    // Simuliertes Laden von Einstellungen, z.B. aus EEPROM/Datei.
+    // Hier werden feste Werte gesetzt.
     warningThreshold = 25;
     criticalThreshold = 10;
 }

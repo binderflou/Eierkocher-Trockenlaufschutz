@@ -5,20 +5,40 @@
 namespace hardware {
 
 class TimerService;
-
+    
+    /**
+    * @brief Simulierter Füllstandssensor.
+    *
+    * In der echten Hardware würde hier ein analoger Eingang ausgelesen.
+    * In der Simulation wird ein Füllstandswert intern hoch/runter gezählt.
+    */
 class FillLevelSensor {
 public:
+    /**
+     * @brief Konstruktor
+     * @param analogPin     Pin-Nummer des (simulierten) Analog-Eingangs.
+     * @param timerService  Gemeinsamer Timer-Service, um das Aktualisierungs-
+     *                      intervall zu steuern.
+     */
     explicit FillLevelSensor(int analogPin,
                              std::shared_ptr<TimerService> timerService);
 
+    /**
+     * @brief Liefert den aktuellen Füllstandswert (0–100 %).
+     *
+     * Die Methode aktualisiert mit einem gewissen Zeitintervall den
+     * internen Simulationswert und gibt ihn anschließend zurück.
+     */
     int readLevel();
+
+    //Gibt an, ob bereits ein gültiger Wert gelesen wurde.
     bool isValid() const;
 
 private:
-    int analogPin;
-    int fillLevelPercent;
-    bool valid;
-    std::shared_ptr<TimerService> timerService;
+    int analogPin;  //simuliert Analog Pin
+    int fillLevelPercent;   //aktueller Füllstand (%)
+    bool valid; //true, sobald mind. ein gültiger Wert vorliegt
+    std::shared_ptr<TimerService> timerService; //Timer für die zeitgesteurte Simulation
 };
 
 } // namespace hardware

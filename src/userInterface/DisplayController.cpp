@@ -7,12 +7,14 @@ DisplayController::DisplayController()
 
 void DisplayController::updateDisplay(int fillLevel, int temperature,
                                       const std::string &status) {
+    // Die eigentlichen Anzeigewerte werden übernommen.
     fillLevelDisplay = fillLevel;
     temperatureDisplay = temperature;
-    //warningMessage = status;
+    //Status könnte hier noch optional gespeichert werden
 }
 
 void DisplayController::showWarning(const std::string &message) {
+    //überschreibt aktuelle Warnung
     warningMessage = message;
 }
 
