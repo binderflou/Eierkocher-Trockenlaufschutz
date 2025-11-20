@@ -3,22 +3,22 @@
 
 | **Req-ID** | **Beschreibung** | **Systemkomponente** | **Zugehörige Klassen** | **Methoden / Schnittstellen** | **Bearbeitung in Sprint** | **Implementierung** | **Testfälle** |
 |-----------|------------------|----------------------|-------------------------|-------------------------------|---------------------------|----------------------|----------------|
-| **R1.1** | Füllstandsmessung, Genauigkeit, Sensorfehler | HardwareAbstraction | `FillLevelSensor`, `TimerService` | `readLevel()`, `isValid()` | 1 | ✔️ Implementiert | M1, I1 |
-| **R1.2** | Temperaturmessung, ΔT-Erkennung, Überhitzung | HardwareAbstraction | `TemperatureSensor`, `TimerService` | `readTemperature()`, `getDeltaT()` | 1 | ✔️ Implementiert | M2 |
-| **R1.3** | Zeitmessung, Messintervall | HardwareAbstraction | `TimerService` | `elapsed(ms)` | 1 | ✔️ Implementiert | (über I-Tests) |
-| **R2.1** | Auswertung Sensorwerte, Statuswechsel | ControlLogic | `SystemController`, `StateDetector` | `updateSystemState()`, `detectState()` | 1 | ✔️ Implementiert | M3, I1 |
-| **R2.2** | Kontinuierlicher Soll/Ist-Vergleich, Sicherheitsmodus | ControlLogic | `SystemController`, `SafetyManager` | `executeCycle()`, `checkDryRun()` | – | ⚠️ Teilweise | I1, I3 |
-| **R2.3** | Fehleranalyse: Sensorfehler, Überhitzung | ControlLogic | `SafetyManager`, `StateDetector` | `checkDryRun()`, `handleError()` | – | ⚠️ Teilweise | – |
-| **R3.1** | Heizungsabschaltung (<10 %, ΔT>5 °C/s) | ControlLogic / Hardware | `HeaterControl`, `SafetyManager` | `switchOffHeater()`, `emergencyShutdown()` | 1 | ✔️ Implementiert | M3, I3 |
-| **R3.2** | Warnungen: Anzeigewechsel, akustisches Signal | UserInterface | `DisplayController`, `BuzzerController` | `updateDisplay()`, `playErrorTone()` | – | ⚠️ Teilweise | I2 |
-| **R3.3** | Berechnung tatsächlicher Füllstand | ControlLogic | `SystemController`, `ThresholdManager` | `updateSystemState()`, `setWarningThreshold()` | 1 | ✔️ Implementiert | M1 |
-| **R4.1** | Plausibilitätsprüfung beim Einschalten | ControlLogic / Hardware | `SystemController`, `FillLevelSensor`, `TemperatureSensor` | `validate()`, `readLevel()`, `readTemperature()` | – | ⚠️ Teilweise | – |
-| **R4.2** | Fehlerklassifizierung | ControlLogic / UI | `SafetyManager`, `DisplayController` | `checkDryRun()`, `showWarning()` | – | ⚠️ Teilweise | – |
-| **R4.3** | Zyklischer Selbsttest (30s) | ControlLogic | `SystemController`, `SafetyManager` | `executeCycle()`, `handleError()` | – | ❌ Nicht implementiert | – |
-| **R5.1** | Füllstandsanzeige (500 ms) | UserInterface | `DisplayController` | `updateDisplay(fillLevel)` | 1 | ✔️ Implementiert | I2 |
-| **R5.2** | Temperaturanzeige | UserInterface | `DisplayController` | `updateDisplay(temperature)` | 1 | ✔️ Implementiert | I2 |
-| **R5.3** | Warnanzeige (Farbschema, Symbole) | UserInterface | `DisplayController` | `updateDisplay(status)` | – | ⚠️ Teilweise | I2 |
-| **R5.4** | Fehlermeldung Trockenlauf, Quittierung | UI / ControlLogic | `DisplayController`, `SystemController` | `showWarning()`, `acknowledgeError()` | – | ⚠️ Teilweise | – |
-| **R5.5** | Akustisches Warnsignal | UserInterface | `BuzzerController` | `playWarningTone()`, `playErrorTone()` | – | ⚠️ Teilweise | – |
-| **R5.6** | Einstellbare Warnschwelle | UI / ControlLogic / Persistence | `InputHandler`, `ThresholdManager`, `SettingsStorage` | `readInput()`, `setWarningThreshold()`, `saveSettings()` | – | ❌ Nicht implementiert | – |
+| **R1.1** | Füllstandsmessung, Genauigkeit, Sensorfehler | HardwareAbstraction | `FillLevelSensor`, `TimerService` | `readLevel()`, `isValid()` | 1 | Implementiert | M1, I1 (bestanden) |
+| **R1.2** | Temperaturmessung, ΔT-Erkennung, Überhitzung | HardwareAbstraction | `TemperatureSensor`, `TimerService` | `readTemperature()`, `getDeltaT()` | 1 | Implementiert | M2 (bestanden) |
+| **R1.3** | Zeitmessung, Messintervall | HardwareAbstraction | `TimerService` | `elapsed(ms)` | 1 | Implementiert | (über I-Tests) (bestanden) |
+| **R2.1** | Auswertung Sensorwerte, Statuswechsel | ControlLogic | `SystemController`, `StateDetector` | `updateSystemState()`, `detectState()` | 1 | Implementiert | M3, I1 (bestanden) |
+| **R2.2** | Kontinuierlicher Soll/Ist-Vergleich, Sicherheitsmodus | ControlLogic | `SystemController`, `SafetyManager` | `executeCycle()`, `checkDryRun()` | – | Teilweise | I1, I3 (bestanden) |
+| **R2.3** | Fehleranalyse: Sensorfehler, Überhitzung | ControlLogic | `SafetyManager`, `StateDetector` | `checkDryRun()`, `handleError()` | – | Teilweise | – |
+| **R3.1** | Heizungsabschaltung (<10 %, ΔT>5 °C/s) | ControlLogic / Hardware | `HeaterControl`, `SafetyManager` | `switchOffHeater()`, `emergencyShutdown()` | 1 | Implementiert | M3, I3 (bestanden) |
+| **R3.2** | Warnungen: Anzeigewechsel, akustisches Signal | UserInterface | `DisplayController`, `BuzzerController` | `updateDisplay()`, `playErrorTone()` | – | Teilweise | I2 (bestanden)|
+| **R3.3** | Berechnung tatsächlicher Füllstand | ControlLogic | `SystemController`, `ThresholdManager` | `updateSystemState()`, `setWarningThreshold()` | 1 | Implementiert | M1 (bestanden) |
+| **R4.1** | Plausibilitätsprüfung beim Einschalten | ControlLogic / Hardware | `SystemController`, `FillLevelSensor`, `TemperatureSensor` | `validate()`, `readLevel()`, `readTemperature()` | – | Teilweise | – |
+| **R4.2** | Fehlerklassifizierung | ControlLogic / UI | `SafetyManager`, `DisplayController` | `checkDryRun()`, `showWarning()` | – | Teilweise | – |
+| **R4.3** | Zyklischer Selbsttest (30s) | ControlLogic | `SystemController`, `SafetyManager` | `executeCycle()`, `handleError()` | – | Nicht implementiert | – |
+| **R5.1** | Füllstandsanzeige (500 ms) | UserInterface | `DisplayController` | `updateDisplay(fillLevel)` | 1 | Implementiert | I2 (bestanden) |
+| **R5.2** | Temperaturanzeige | UserInterface | `DisplayController` | `updateDisplay(temperature)` | 1 | Implementiert | I2 (bestanden) |
+| **R5.3** | Warnanzeige (Farbschema, Symbole) | UserInterface | `DisplayController` | `updateDisplay(status)` | – | Teilweise | I2 (bestanden) |
+| **R5.4** | Fehlermeldung Trockenlauf, Quittierung | UI / ControlLogic | `DisplayController`, `SystemController` | `showWarning()`, `acknowledgeError()` | – | Teilweise | – |
+| **R5.5** | Akustisches Warnsignal | UserInterface | `BuzzerController` | `playWarningTone()`, `playErrorTone()` | – | Teilweise | – |
+| **R5.6** | Einstellbare Warnschwelle | UI / ControlLogic / Persistence | `InputHandler`, `ThresholdManager`, `SettingsStorage` | `readInput()`, `setWarningThreshold()`, `saveSettings()` | – | Nicht implementiert | – |
 
