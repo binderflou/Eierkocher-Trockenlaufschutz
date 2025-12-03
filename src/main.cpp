@@ -26,7 +26,7 @@ int main() {
     auto timerServiceFill = std::make_shared<hardware::TimerService>();
     auto timerServiceTemp = std::make_shared<hardware::TimerService>();
     
-    // Die Hardware-Klassen simulieren interne Werte. Konkrete Pins werden nicht benötigt.
+    // Die Hardware-Klassen simulieren interne Werte. Konkrete Pins werden nicht benÃ¶tigt.
     hardware::FillLevelSensor fillLevelSensor(0, timerServiceFill);
     hardware::TemperatureSensor temperatureSensor(0, timerServiceTemp);
     hardware::HeaterControl heaterControl(0);
@@ -56,10 +56,10 @@ int main() {
     bool previousBuzzerState = buzzerController.isPlaying();
 
     while (true) {
-        // Ein Steuerungszyklus: Sensoren lesen, Logik ausführen, Display/Buzzer steuern
+        // Ein Steuerungszyklus: Sensoren lesen, Logik ausfÃ¼hren, Display/Buzzer steuern
         controller.executeCycle();
 
-        // Werte aus der Display-Simulation abfragen (für Konsolenausgabe)
+        // Werte aus der Display-Simulation abfragen (fÃ¼r Konsolenausgabe)
         int currentFillLevel = displayController.getFillLevelDisplay();
         int currentTemperature = displayController.getTemperatureDisplay();
         std::string currentState = stateDetector.getState();
@@ -93,14 +93,14 @@ int main() {
             previousWarning = warningMessage;
         }
 
-        //Ereignis Logging für Zustandswechsel
+        //Ereignis Logging fÃ¼r Zustandswechsel
         if (currentState != previousState) {
             std::cout << "  -> Systemzustand geaendert zu '" << currentState
                       << "'" << std::endl;
             previousState = currentState;
         }
 
-        //Ereignis Logging für Heizungszustand
+        //Ereignis Logging fÃ¼r Heizungszustand
         if (heaterState != previousHeaterState) {
             std::cout << "  -> Heizung wurde "
                       << (heaterState ? "eingeschaltet" : "ausgeschaltet")
@@ -108,15 +108,15 @@ int main() {
             previousHeaterState = heaterState;
         }
 
-        //Ereignis Logging für Buzzerzustand
+        //Ereignis Logging fÃ¼r Buzzerzustand
         if (buzzerState != previousBuzzerState) {
             std::cout << "  -> Buzzer "
                       << (buzzerState ? "gestartet" : "gestoppt") << std::endl;
             previousBuzzerState = buzzerState;
         }
 
-        //Simulierter Zyklusabstand: 1 sek
-        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+        //Simulierter Zyklusabstand: 0.5 sek für mindestens 2 Updates pro Sekunde (R2.2)
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
     }
 
     return 0;
