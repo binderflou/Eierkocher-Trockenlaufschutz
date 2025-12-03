@@ -1,7 +1,7 @@
 # Design
 ## Klassendiagramm
 
-![Klassendiagramm](../referenziert/Design/KlassendiagrammSprint2.png)
+![Klassendiagramm](../referenziert/Design/Klassendiagramm_Sprint2.png)
 
 ## 1. Zweck des Klassendiagramms
 Das Klassendiagramm beschreibt die objektorientierte Struktur der Software für den **Trockenlaufschutz eines Eierkochers**.  
