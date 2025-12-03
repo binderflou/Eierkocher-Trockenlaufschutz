@@ -14,6 +14,21 @@ Im Mittelpunkt stehen dabei die folgenden Anforderungen:
 
 # Retrospektive
 
+Was lief gut
+
+Die Erweiterung des SafetyManagers um Fehlerklassifizierung, Überhitzungserkennung und Sensorfehleranalyse wurde erfolgreich umgesetzt.
+
+Der kontinuierliche Soll/Ist-Vergleich (R2.2) funktioniert zuverlässig und ist sauber in den SystemController integriert.
+
+Die Plausibilitätsprüfung beim Einschalten (R4.1) wurde logisch und klar umgesetzt und verhindert Start in fehlerhaften Zuständen.
+
+Der zyklische Selbsttest (R4.3) wurde implementiert und löst wie geplant aus.
+
+Die Testfälle zur Modul- und Integrationsebene decken die neuen Features gut ab und verliefen erfolgreich.
+
+Das Zusammenspiel zwischen SafetyManager, Anzeige und Buzzer ist nun deutlich besser strukturiert und nachvollziehbar.
+
+
 
 ## Was lief gut?
 - Alle ausgewählten Requirements für Sprint 2 wurden in Sprint 2 erledigt
@@ -22,11 +37,15 @@ Im Mittelpunkt stehen dabei die folgenden Anforderungen:
 - Klassendiagramm konnte in Code überführt werden
 - Code wurde konsequent kommentiert
 
-## Was lief nicht gut?
-- Erstellung UML Diagramme sehr aufwendig
-- Startpunkt für Programmierung hat gefehlt
-- Programmierung hatte keinen roten Faden, es wurde einfach drauf los programmiert
-- Aktualisierung Traceability Matrix erfolgte nicht automatisch
+## Was lief weniger gut?
+
+- Die Wiederverwendbarkeit der Fehlercodes und Fehlertexte ist noch nicht ideal gelöst; teilweise sind die Meldungen noch „hardcoded“
+
+- Die Abstimmung zwischen SystemController und SafetyManager ist recht eng gekoppelt, was langfristig zu Pflegeaufwand führen kann
+
+- Der Selbsttest ist funktionsfähig, aber noch nicht vollständig modularisiert (z. B. könnte er in eine eigene Komponente ausgelagert werden)
+
+- Die Plausibilitätslogik ist aktuell noch relativ einfach und könnte in einem späteren Sprint robuster gestaltet werden
 
 ## Lessons Learned
 - nicht von der Vielzahl an Anforderungen überfordern lassen
@@ -34,3 +53,27 @@ Im Mittelpunkt stehen dabei die folgenden Anforderungen:
 - Traceability Matrix konsequent pflegen
 
 ## Baseline Sprint 2
+
+Mit Abschluss von Sprint 2 liegt eine funktionale und stabilisierte Version des Trockenlaufschutzsystems vor, die alle sicherheitsrelevanten Erweiterungen aus diesem Sprint integriert. Die Basisfunktionalität aus Sprint 1 ist weiterhin vollständig vorhanden, wurde aber durch zusätzliche Prüfmechanismen, Fehlerklassifikation und Selbsttests deutlich robuster gemacht.
+
+### Folgende Komponenten bilden den gesicherten Stand (Baseline) von Sprint 2:
+
+- SafetyManager wurde erfolgreich erweitert um:
+
+    - kontinuierlichen Soll/Ist-Vergleich (R2.2)
+
+    - Überhitzungserkennung und Sensorfehleranalyse (R2.3)
+
+    - Fehlerklassifizierung (R4.2)
+
+    - Plausibilitätsprüfung beim Einschalten (R4.1)
+
+    - zyklischen Selbsttest (R4.3)
+
+- SystemController ist nun in der Lage, Fehlerzustände korrekt zu verarbeiten, zwischen Normalbetrieb und Sicherheitsmodus zu unterscheiden und UI-/Heater-Komponenten entsprechend anzusteuern
+
+- DisplayController und BuzzerController sind vollständig in die Fehler- und Warnkommunikation integriert und reagieren konsistent auf jede klassifizierte Fehlersituation
+
+- Sensoren (Temperatur- und Füllstandsensor) unterstützen nun alle für Fehleranalysen benötigten Werte bzw. Validitätsprüfungen
+
+- Testabdeckung wurde um sechs neue Modul- und Integrationstests erweitert, die alle Anforderungen dieses Sprints erfolgreich prüfen
