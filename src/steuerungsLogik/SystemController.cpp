@@ -1,5 +1,6 @@
 #include "SystemController.h"
 
+#include <cmath>
 #include <string>
 
 #include "SafetyManager.h"
@@ -30,13 +31,43 @@ SystemController::SystemController(
     settingsStorage.loadSettings();
     thresholdManager.setWarningThreshold(settingsStorage.getWarningThreshold());
     thresholdManager.setCriticalThreshold(settingsStorage.getCriticalThreshold());
+
+    auto now = std::chrono::steady_clock::now();
+    lastSelfTest = now;
+    lastChangeTimestamp = now;
 }
 
 void SystemController::executeCycle() {
     // 1. Sensoren auslesen
     int fillLevel = fillSensor.readLevel();
     float temperature = tempSensor.readTemperature();
-   
+
+    // Plausibilitätsprüfung beim Einschalten (R4.1)
+    if (!startupChecked) {
+        startupChecked = performStartupPlausibilityCheck(fillLevel, temperature);
+        if (!startupChecked) {
+            enterSafetyMode("Startup plausibility failed");
+            return;
+        }
+    }
+
+    // Messwertvalidierung und Sicherheitsmodus, falls keine sinnvollen Werte vorliegen (R2.2)
+    if (!fillSensor.isValid()) {
+        enterSafetyMode("Sensor error: fill level invalid");
+        return;
+    }
+    if (temperature < -10.0f || temperature > 150.0f) {
+        enterSafetyMode("Sensor error: temperature invalid");
+        return;
+    }
+
+    if (safetyModeActive) {
+        // Verlasse Sicherheitsmodus, sobald gültige Werte vorliegen
+        safetyModeActive = false;
+        uiController.clearDisplay();
+        buzzerController.stopTone();
+    }
+
     if (fillLevel <= 5 && lastFillLevel > 5) {
         tempSensor.resetTemperature();
     }
@@ -45,15 +76,23 @@ void SystemController::executeCycle() {
     
     // 2. Zustandsdetektion aktualisieren
     updateSystemState(fillLevel, temperature);
-    
-    // 3. Safety-Logik / Trockenlaufpr�fung
+
+    // 2.1 Überhitzungserkennung (R2.3)
+    if (temperature > 110.0f) {
+        safetyManager.emergencyShutdown(heater);
+        uiController.showWarning("Critical: overheating");
+        buzzerController.playErrorTone();
+        return;
+    }
+
+    // 3. Safety-Logik / Trockenlaufprüfung
     if (safetyManager.checkDryRun(fillLevel, tempSensor.getDeltaT())) {
         // Trockenlauf erkannt -> Notabschaltung + Fehlerton + Warnung
         safetyManager.emergencyShutdown(heater);
         uiController.showWarning("Dry run detected");
         buzzerController.playErrorTone();
     } else if (fillLevel < thresholdManager.getCriticalThreshold()) {
-        // Kritischer F�llstand -> Heizung aus, Warnung + Warnton
+        // Kritischer Füllstand -> Heizung aus, Warnung + Warnton
         heater.switchOff();
         uiController.showWarning("Critical fill level");
         buzzerController.playWarningTone();
@@ -69,7 +108,7 @@ void SystemController::executeCycle() {
         buzzerController.stopTone();
     }
 
-    // 4. Anzeige aktualisieren (F�llstand, Temperatur, aktueller Zustand)
+    // 4. Anzeige aktualisieren (Füllstand, Temperatur, aktueller Zustand)
     uiController.updateDisplay(fillLevel, static_cast<int>(temperature),
                                stateDetector.getState());
 
@@ -78,6 +117,9 @@ void SystemController::executeCycle() {
         // In dieser Simulation: Jeder Tastendruck stoppt den Ton
         buzzerController.stopTone();
     }
+
+    // 6. Zyklischer Selbsttest (R4.3)
+    runSelfTest(fillLevel, temperature);
 }
 
 void SystemController::updateSystemState(int fillLevel, float temperature) {
@@ -93,6 +135,39 @@ void SystemController::handleError(int errorCode) {
     heater.switchOff();
     buzzerController.playErrorTone();
     uiController.showWarning("Error code: " + std::to_string(errorCode));
+}
+
+bool SystemController::performStartupPlausibilityCheck(int fillLevel,
+                                                      float temperature) {
+    bool fillOk = fillLevel >= 0 && fillLevel <= 100;
+    bool tempOk = temperature >= 0.0f && temperature <= 50.0f;
+    return fillOk && tempOk;
+}
+
+void SystemController::enterSafetyMode(const std::string &reason) {
+    safetyModeActive = true;
+    heater.switchOff();
+    uiController.showWarning(reason);
+    buzzerController.playErrorTone();
+}
+
+void SystemController::runSelfTest(int fillLevel, float temperature) {
+    auto now = std::chrono::steady_clock::now();
+
+    if (fillLevel != lastObservedFill ||
+        std::fabs(temperature - lastObservedTemperature) > 0.1f) {
+        lastObservedFill = fillLevel;
+        lastObservedTemperature = temperature;
+        lastChangeTimestamp = now;
+    }
+
+    if (now - lastSelfTest >= std::chrono::seconds(30)) {
+        if (now - lastChangeTimestamp >= std::chrono::seconds(10)) {
+            uiController.showWarning("Self-test: values unchanged");
+            buzzerController.playWarningTone();
+        }
+        lastSelfTest = now;
+    }
 }
 
 } // namespace logic

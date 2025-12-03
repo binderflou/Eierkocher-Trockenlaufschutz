@@ -1,6 +1,8 @@
 #pragma once
 
+#include <chrono>
 #include <memory>
+#include <string>
 
 namespace hardware {
 class FillLevelSensor;
@@ -44,11 +46,11 @@ public:
                      persistence::SettingsStorage &settingsStorage);
 
     /**
-    * @brief Führt einen Steuerungszyklus aus.
+    * @brief FÃ¼hrt einen Steuerungszyklus aus.
     *
     * - Sensorwerte lesen
-    * - Zustände aktualisieren
-    * - Safety-Funktionen prüfen (Trockenlauf etc.)
+    * - ZustÃ¤nde aktualisieren
+    * - Safety-Funktionen prÃ¼fen (Trockenlauf etc.)
     * - Heizung / Buzzer / Display steuern
     */
     void executeCycle();
@@ -56,7 +58,7 @@ public:
     /**
     * @brief Aktualisiert den logischen Systemzustand anhand aktueller Werte
     *
-    * @param fillLevel   Aktueller Füllstand
+    * @param fillLevel   Aktueller FÃ¼llstand
     * @param temperature Aktuelle Temperatur
     */
     void updateSystemState(int fillLevel, float temperature);
@@ -67,6 +69,10 @@ public:
     void handleError(int errorCode);
 
 private:
+    bool performStartupPlausibilityCheck(int fillLevel, float temperature);
+    void enterSafetyMode(const std::string &reason);
+    void runSelfTest(int fillLevel, float temperature);
+
     hardware::FillLevelSensor &fillSensor;
     hardware::TemperatureSensor &tempSensor;
     hardware::HeaterControl &heater;
@@ -77,7 +83,13 @@ private:
     SafetyManager &safetyManager;
     ThresholdManager &thresholdManager;
     persistence::SettingsStorage &settingsStorage;
+    bool startupChecked = false;
+    bool safetyModeActive = false;
     int lastFillLevel = 100;
+    std::chrono::steady_clock::time_point lastSelfTest;
+    std::chrono::steady_clock::time_point lastChangeTimestamp;
+    int lastObservedFill = -1;
+    float lastObservedTemperature = -999.0f;
 };
 
 } // namespace logic
