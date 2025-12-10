@@ -3,16 +3,40 @@
 namespace ui {
 
 BuzzerController::BuzzerController(int buzzerPin)
-    : buzzerPin(buzzerPin), playing(false) {}
+    : buzzerPin(buzzerPin), playing(false), currentTone(ToneType::None) {}
 
-void BuzzerController::playWarningTone() { playing = true; }
+void BuzzerController::playWarningTone() {
+    playing = true;
+    currentTone = ToneType::Warning;
+}
 
-void BuzzerController::playErrorTone() { playing = true; }
+void BuzzerController::playErrorTone() {
+    playing = true;
+    currentTone = ToneType::Error;
+}
 
-void BuzzerController::stopTone() { playing = false; }
+void BuzzerController::stopTone() {
+    playing = false;
+    currentTone = ToneType::None;
+}
 
-// Gibt den aktuellen Simulationszustand zurück.
+// Gibt den aktuellen Simulationszustand zurÃ¼ck.
 bool BuzzerController::isPlaying() const { return playing; }
+
+BuzzerController::ToneType BuzzerController::getCurrentTone() const {
+    return currentTone;
+}
+
+std::string BuzzerController::getToneDescription() const {
+    switch (currentTone) {
+    case ToneType::Warning:
+        return "Warning";
+    case ToneType::Error:
+        return "Error";
+    default:
+        return "None";
+    }
+}
 
 } // namespace ui
 

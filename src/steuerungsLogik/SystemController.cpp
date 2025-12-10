@@ -113,9 +113,16 @@ void SystemController::executeCycle() {
                                stateDetector.getState());
 
     // 5. Benutzereingabe (OK-Taste etc.) auswerten
-    if (inputHandler.readInput()) {
-        // In dieser Simulation: Jeder Tastendruck stoppt den Ton
-        buzzerController.stopTone();
+    bool buttonState = inputHandler.readInput();
+    bool buttonPressed = buttonState && !lastButtonState;
+    lastButtonState = buttonState;
+
+    if (buttonPressed) {
+        if (!uiController.getWarningMessage().empty()) {
+            acknowledgeWarning();
+        } else {
+            adjustWarningThreshold();
+        }
     }
 
     // 6. Zyklischer Selbsttest (R4.3)
@@ -168,6 +175,27 @@ void SystemController::runSelfTest(int fillLevel, float temperature) {
         }
         lastSelfTest = now;
     }
+}
+
+void SystemController::acknowledgeWarning() {
+    uiController.clearWarning();
+    buzzerController.stopTone();
+    if (safetyManager.isDryRunDetected()) {
+        heater.switchOff();
+    }
+}
+
+void SystemController::adjustWarningThreshold() {
+    int current = thresholdManager.getWarningThreshold();
+    int next = current + 5;
+    if (next > 50) {
+        next = 10;
+    }
+
+    thresholdManager.setWarningThreshold(next);
+    settingsStorage.setWarningThreshold(next);
+    settingsStorage.saveSettings();
+    uiController.showWarning("Warning threshold: " + std::to_string(next) + "%");
 }
 
 } // namespace logic

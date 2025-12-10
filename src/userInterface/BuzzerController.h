@@ -1,5 +1,7 @@
 #pragma once
 
+#include <string>
+
 namespace ui {
 
  /**
@@ -15,7 +17,7 @@ public:
 
     /**
      * @brief Konstruktor
-     * @param buzzerPin Pin-Nummer, an dem der Buzzer im echten System h‰ngen w¸rde.
+     * @param buzzerPin Pin-Nummer, an dem der Buzzer im echten System h√§ngen w√ºrde.
      *                  In der Simulation wird dieser Wert nicht verwendet.
      */
 
@@ -26,11 +28,15 @@ public:
     void stopTone();
 
     bool isPlaying() const;
+    std::string getToneDescription() const;
+
+    enum class ToneType { None, Warning, Error };
+    ToneType getCurrentTone() const;
 
 private:
-    int buzzerPin;  //simuliert Pin an dem Buzzer angeschlossen w‰re
+    int buzzerPin;  //simuliert Pin an dem Buzzer angeschlossen w√§re
     bool playing;   //Ton gerade ja/nein
+    ToneType currentTone;
 };
 
 } // namespace ui
-

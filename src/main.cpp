@@ -26,7 +26,7 @@ int main() {
     auto timerServiceFill = std::make_shared<hardware::TimerService>();
     auto timerServiceTemp = std::make_shared<hardware::TimerService>();
     
-    // Die Hardware-Klassen simulieren interne Werte. Konkrete Pins werden nicht benÃ¶tigt.
+    // Die Hardware-Klassen simulieren interne Werte. Konkrete Pins werden nicht benötigt.
     hardware::FillLevelSensor fillLevelSensor(0, timerServiceFill);
     hardware::TemperatureSensor temperatureSensor(0, timerServiceTemp);
     hardware::HeaterControl heaterControl(0);
@@ -56,28 +56,31 @@ int main() {
     bool previousBuzzerState = buzzerController.isPlaying();
 
     while (true) {
-        // Ein Steuerungszyklus: Sensoren lesen, Logik ausfÃ¼hren, Display/Buzzer steuern
+        // Ein Steuerungszyklus: Sensoren lesen, Logik ausführen, Display/Buzzer steuern
         controller.executeCycle();
 
-        // Werte aus der Display-Simulation abfragen (fÃ¼r Konsolenausgabe)
+        // Werte aus der Display-Simulation abfragen (für Konsolenausgabe)
         int currentFillLevel = displayController.getFillLevelDisplay();
         int currentTemperature = displayController.getTemperatureDisplay();
+        std::string displayStatus = displayController.getStatusText();
         std::string currentState = stateDetector.getState();
         std::string warningMessage = displayController.getWarningMessage();
         bool heaterState = heaterControl.getStatus();
         bool buzzerState = buzzerController.isPlaying();
+        std::string buzzerTone = buzzerController.getToneDescription();
 
         std::cout << "[Zyklus " << cycle++ << "] Fuellstand: " << currentFillLevel
                   << "% | Temperatur: " << currentTemperature
                   << "C | Zustand: " << currentState
+                  << " | Display: " << displayStatus
                   << " | Heizung: " << (heaterState ? "AN" : "AUS");
-        
+
         if (!warningMessage.empty()) {
             std::cout << " | Warnung: " << warningMessage;
         }
 
         if (buzzerState) {
-            std::cout << " | Buzzer aktiv";
+            std::cout << " | Buzzer aktiv (" << buzzerTone << ")";
         }
 
         std::cout << std::endl;
@@ -93,14 +96,14 @@ int main() {
             previousWarning = warningMessage;
         }
 
-        //Ereignis Logging fÃ¼r Zustandswechsel
+        //Ereignis Logging für Zustandswechsel
         if (currentState != previousState) {
             std::cout << "  -> Systemzustand geaendert zu '" << currentState
                       << "'" << std::endl;
             previousState = currentState;
         }
 
-        //Ereignis Logging fÃ¼r Heizungszustand
+        //Ereignis Logging für Heizungszustand
         if (heaterState != previousHeaterState) {
             std::cout << "  -> Heizung wurde "
                       << (heaterState ? "eingeschaltet" : "ausgeschaltet")
@@ -108,7 +111,7 @@ int main() {
             previousHeaterState = heaterState;
         }
 
-        //Ereignis Logging fÃ¼r Buzzerzustand
+        //Ereignis Logging für Buzzerzustand
         if (buzzerState != previousBuzzerState) {
             std::cout << "  -> Buzzer "
                       << (buzzerState ? "gestartet" : "gestoppt") << std::endl;
