@@ -14,22 +14,6 @@ Im Mittelpunkt stehen dabei die folgenden Anforderungen:
 
 # Retrospektive
 
-Was lief gut
-
-Die Erweiterung des SafetyManagers um Fehlerklassifizierung, Überhitzungserkennung und Sensorfehleranalyse wurde erfolgreich umgesetzt.
-
-Der kontinuierliche Soll/Ist-Vergleich (R2.2) funktioniert zuverlässig und ist sauber in den SystemController integriert.
-
-Die Plausibilitätsprüfung beim Einschalten (R4.1) wurde logisch und klar umgesetzt und verhindert Start in fehlerhaften Zuständen.
-
-Der zyklische Selbsttest (R4.3) wurde implementiert und löst wie geplant aus.
-
-Die Testfälle zur Modul- und Integrationsebene decken die neuen Features gut ab und verliefen erfolgreich.
-
-Das Zusammenspiel zwischen SafetyManager, Anzeige und Buzzer ist nun deutlich besser strukturiert und nachvollziehbar.
-
-
-
 ## Was lief gut?
 - Alle ausgewählten Requirements für Sprint 2 wurden in Sprint 2 erledigt
 - Tests wurden erfolgreich durchgeführt
