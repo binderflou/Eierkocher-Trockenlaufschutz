@@ -9,7 +9,7 @@ namespace ui {
      *
      * Die Klasse speichert die anzuzeigenden Werte intern,
      * damit sie z.B. aus der main-Schleife abgefragt und in der Konsole
-     * ausgegeben werden können.
+     * ausgegeben werden kÃ¶nnen.
      */
 
 class DisplayController {
@@ -19,34 +19,42 @@ public:
     /**
      * @brief Aktualisiert die Hauptanzeige.
      *
-     * @param fillLevel    Füllstand in Prozent (0–100).
-     * @param temperature  Temperatur in °C.
+     * @param fillLevel    FÃ¼llstand in Prozent (0Â–100).
+     * @param temperature  Temperatur in Â°C.
      * @param status       Textueller Status (z.B. "Heating", "LowFill"...).
      *
      * In der Simulation wird der Status-String aktuell nicht separat
-     * gespeichert, sondern nur für die externe Ausgabe genutzt, wenn
+     * gespeichert, sondern nur fÃ¼r die externe Ausgabe genutzt, wenn
      * irgendwo gemerkt. Die eigentliche Anzeige speichert nur
-     * Füllstand, Temperatur und optional eine Warnmeldung.
+     * FÃ¼llstand, Temperatur und optional eine Warnmeldung.
      */
     void updateDisplay(int fillLevel, int temperature, const std::string &status);
     /**
     *@brief Zeigt eine Warnmeldung auf dem Display an.
     *
-    * Typische Meldungen : "Low fill level", "Critical fill level", "Füllen!".
+    * Typische Meldungen : "Low fill level", "Critical fill level", "FÃ¼llen!".
     */
     void showWarning(const std::string &message);
+
+    /**
+    * @brief Entfernt eine aktuell gesetzte Warnmeldung ohne die Hauptanzeige zu verÃ¤ndern.
+    */
+    void clearWarning();
     
-    //setzt Displaywerte zurück (0, Warnmeldung löschen)
+    //setzt Displaywerte zurÃ¼ck (0, Warnmeldung lÃ¶schen)
     void clearDisplay();
     //lieferen die zuletzt angezeigten Werte
     int getFillLevelDisplay() const;
     int getTemperatureDisplay() const;
     //liefert aktuell gesetzte Warnmeldung
     std::string getWarningMessage() const;
+    //liefert den zuletzt gesetzten Status-Text
+    std::string getStatusText() const;
 
 private:
     int fillLevelDisplay;
     int temperatureDisplay;
+    std::string statusText;
     std::string warningMessage;
 };
 

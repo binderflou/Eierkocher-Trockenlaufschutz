@@ -72,6 +72,8 @@ private:
     bool performStartupPlausibilityCheck(int fillLevel, float temperature);
     void enterSafetyMode(const std::string &reason);
     void runSelfTest(int fillLevel, float temperature);
+    void acknowledgeWarning();
+    void adjustWarningThreshold();
 
     hardware::FillLevelSensor &fillSensor;
     hardware::TemperatureSensor &tempSensor;
@@ -90,6 +92,7 @@ private:
     std::chrono::steady_clock::time_point lastChangeTimestamp;
     int lastObservedFill = -1;
     float lastObservedTemperature = -999.0f;
+    bool lastButtonState = false;
 };
 
 } // namespace logic

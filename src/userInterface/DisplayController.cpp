@@ -3,25 +3,31 @@
 namespace ui {
 
 DisplayController::DisplayController()
-    : fillLevelDisplay(0), temperatureDisplay(0) {}
+    : fillLevelDisplay(0), temperatureDisplay(0), statusText("Idle") {}
 
 void DisplayController::updateDisplay(int fillLevel, int temperature,
                                       const std::string &status) {
-    // Die eigentlichen Anzeigewerte werden übernommen.
+    // Die eigentlichen Anzeigewerte werden Ã¼bernommen.
     fillLevelDisplay = fillLevel;
     temperatureDisplay = temperature;
-    //Status könnte hier noch optional gespeichert werden
+    statusText = status;
 }
 
 void DisplayController::showWarning(const std::string &message) {
-    //überschreibt aktuelle Warnung
+    //Ã¼berschreibt aktuelle Warnung
     warningMessage = message;
+    statusText = "Warning";
+}
+
+void DisplayController::clearWarning() {
+    warningMessage.clear();
 }
 
 void DisplayController::clearDisplay() {
     fillLevelDisplay = 0;
     temperatureDisplay = 0;
     warningMessage.clear();
+    statusText.clear();
 }
 
 int DisplayController::getFillLevelDisplay() const { return fillLevelDisplay; }
@@ -29,6 +35,8 @@ int DisplayController::getFillLevelDisplay() const { return fillLevelDisplay; }
 int DisplayController::getTemperatureDisplay() const { return temperatureDisplay; }
 
 std::string DisplayController::getWarningMessage() const { return warningMessage; }
+
+std::string DisplayController::getStatusText() const { return statusText; }
 
 } // namespace ui
 
