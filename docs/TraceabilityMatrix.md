@@ -17,7 +17,7 @@
 | **R4.3** | Zyklischer Selbsttest (30s) | ControlLogic | `SystemController`, `SafetyManager` | `executeCycle()` `handleError()` | 2 | `executeCycle()` `handleError()` | M6, I6 (bestanden) |
 | **R5.1** | Füllstandsanzeige (500 ms) | UserInterface | `DisplayController` | `updateDisplay(fillLevel)` | 1 | `updateDisplay(fillLevel)` | I2 (bestanden) |
 | **R5.2** | Temperaturanzeige | UserInterface | `DisplayController` | `updateDisplay(temperature)` | 1 | `updateDisplay(temperature)` | I2 (bestanden) |
-| **R5.3** | Warnanzeige | UserInterface | `DisplayController` | `updateDisplay(status)` | 3 | `updateDisplay(status)` (Teilweise) | I2 (bestanden) |
-| **R5.4** | Fehlermeldung Trockenlauf, Quittierung | UI / ControlLogic | `DisplayController`, `SystemController` | `showWarning()` `acknowledgeError()` | 3 | `showWarning()` | – |
-| **R5.5** | Akustisches Warnsignal | UserInterface | `BuzzerController` | `playWarningTone()` `playErrorTone()` | 3 | `playWarningTone()` `playErrorTone()` | – |
-| **R5.6** | Einstellbare Warnschwelle | UI / ControlLogic / PersistenceManager | `InputHandler`, `ThresholdManager`, `SettingsStorage` | `readInput()`, `setWarningThreshold()` | 3 | `readInput()`, `setWarningThreshold()` | – |
+| **R5.3** | Warnanzeige | UserInterface | `DisplayController` | `updateDisplay(status)` | 3 | `updateDisplay(status)` | I2, M9, I10 (bestanden) |
+| **R5.4** | Fehlermeldung Trockenlauf, Quittierung | UI / ControlLogic | `DisplayController`, `SystemController` | `showWarning()` `acknowledgeError()` | 3 | `showWarning()` | M7, M8, I7, I8, I9 (bestanden) |
+| **R5.5** | Akustisches Warnsignal | UserInterface | `BuzzerController` | `playWarningTone()` `playErrorTone()` | 3 | `playWarningTone()` `playErrorTone()` | I7, I9, I10 (bestanden) |
+| **R5.6** | Einstellbare Warnschwelle | UI / ControlLogic / PersistenceManager | `InputHandler`, `ThresholdManager`, `SettingsStorage` | `readInput()`, `setWarningThreshold()` | 3 | `readInput()`, `setWarningThreshold()` | M10, I10 (bestanden) |

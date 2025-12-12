@@ -12,6 +12,10 @@ Im Mittelpunkt stehen dabei die folgenden Anforderungen:
 - R4.2  Fehlerklassifizierung | ControlLogic / UI
 - R4.3  Zyklischer Selbsttest
 
+## Durchführung der Tests aus Sprint 1
+
+Zusätzlich zu den neu definierten Testfällen für Sprint 2 wurden alle relevanten Testfälle aus Sprint 1 erneut ausgeführt. Ziel war es sicherzustellen, dass die im zweiten Sprint erweiterten sicherheitsrelevanten Funktionen keine negativen Auswirkungen auf bereits implementierte Basisfunktionen haben. Sämtliche wiederholten Tests aus Sprint 1 wurden erfolgreich durchgeführt, sodass die Funktionalität und Stabilität der bestehenden Systemkomponenten weiterhin gewährleistet ist.
+
 # Retrospektive
 
 ## Was lief gut?

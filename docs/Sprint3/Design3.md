@@ -1,527 +1,345 @@
-# Design
-## Klassendiagramm
+# Design 3
 
-![Klassendiagramm](../referenziert/Design/Klassendiagramm_Sprint2.png)
+## 1. Ziel von Sprint 3
 
-## 1. Zweck des Klassendiagramms
-Das Klassendiagramm beschreibt die objektorientierte Struktur der Software für den **Trockenlaufschutz eines Eierkochers**.  
-Es dient der logischen Modellierung aller wesentlichen Systemkomponenten und stellt deren **Verantwortlichkeiten, Attribute, Methoden und Beziehungen** dar.  
-Die Architektur folgt dem **Schichtenmodell** aus:
+Sprint 3 fokussiert sich auf die **Verbesserung der Benutzerinteraktion, Warn- und Fehlersignalisierung** sowie auf ein **robustes, sicherheitsgerechtes Verhalten** im Trockenlauf-Fall.  
+Die Änderungen dienen der Umsetzung der Requirements **R5.3–R5.6**.
+Der Fokus liegt auf:
 
-- **UserInterface** (Anzeige, Ton, Eingabe)  
-- **Steuerungslogik** (Systemsteuerung, Zustandsmanagement, Sicherheit)  
-- **HardwareAbstraction** (Sensor- und Aktorsteuerung)  
-- **PersistenceManager** (Datenspeicherung und Kalibrierung)
+* stabiler Trockenlauf-Erkennung (gelatcht)
+* manuellem Recovery-Prozess (Füllen + Quittierung)
+* ereignisbasierter Konsolenausgabe
+* konfigurierbaren Warnschwellen zur Laufzeit
 
-Dieses Diagramm bildet die Grundlage für die Implementierung auf einem **Arduino Nano** mit C++.
+## 2. Wesentliche funktionale Änderungen
 
----
+### 2.1 Manueller Recovery-Mechanismus
+Nach Erkennung eines Trockenlaufs wechselt das System in explizite Zustände:
 
-## 2. Überblick über die Struktur
-Die Software besteht aus vier Hauptschichten mit den zugehörigen Klassen:
+- `WAIT_FOR_FILL`: Benutzer muss Wasser nachfüllen (`F`)
+- `WAIT_FOR_ACK`: Benutzer bestätigt Neustart (`A`)
 
-| **Schicht** | **Klassen** | **Beschreibung** |
-|--------------|-------------|------------------|
-| **UserInterface** | `DisplayController`, `BuzzerController`, `InputHandler` | Verwaltung von Anzeige, akustischer Signalisierung und Benutzereingaben |
-| **Steuerungslogik** | `SystemController`, `StateDetector`, `SafetyManager`, `ThresholdManager` | Zentrale Steuerung, Zustandsüberwachung und Sicherheitslogik |
-| **HardwareAbstraction** | `FillLevelSensor`, `TemperatureSensor`, `HeaterControl`, `TimerService` | Ansteuerung und Abstraktion der Sensoren und Aktoren |
-| **PersistenceManager** | `CalibrationData`, `SettingsStorage` | Verwaltung von Kalibrierungsdaten und Persistenzspeicherung |
+Währenddessen:
+- bleibt die Heizung abgeschaltet
+- bleibt der Buzzer aktiv
+- werden Sensorwerte und Anzeige eingefroren
 
----
-
-## 3. Klassendokumentation
-
-### 3.1 `SystemController`
-**Rolle:** Hauptsteuerung der Anwendung  
-**Schicht:** Steuerungslogik  
-
-**Aufgaben:**
-- Führt den Hauptzyklus (`loop`) aus  
-- Liest Sensordaten ein  
-- Prüft Zustände und Sicherheitsbedingungen  
-- Steuert Anzeige, Summer und Heizung  
-
-**Attribute:**
-- `fillSensor : FillLevelSensor`  
-- `tempSensor : TemperatureSensor`  
-- `heater : HeaterControl`  
-- `ui : DisplayController`  
-- `buzzer : BuzzerController`  
-
-**Methoden:**
-- `setup()` – Initialisierung von Komponenten  
-- `executeCycle()` – Ablaufsteuerung  
-- `handleError(errorCode : int)` – Fehlerbehandlung  
-- `updateSystemState()` – Zustandslogik aktualisieren  
+Ein automatischer Neustart ohne Benutzerinteraktion ist nicht mehr möglich.
 
 ---
 
-### 3.2 `StateDetector`
-**Rolle:** Erkennung des aktuellen Systemzustands (Bereit, Warnung, Trockenlauf, Fehler)  
-**Schicht:** Steuerungslogik  
-
-**Aufgaben:**
-- Auswertung von Füllstand und Temperatur  
-- Rückgabe eines logischen Zustands zur Anzeige und Steuerung  
-
-**Attribute:**
-- `currentState : string`  
-- `fillLevel : int`  
-- `temperature : float`  
-
-**Methoden:**
-- `detectState(fillLevel : int, temperature : float) : string`  
-- `getState() : string`
+### 2.2 Gelatchte Sicherheitslogik
+Der Trockenlaufzustand wird nach der ersten Erkennung **persistent gehalten**, bis er explizit quittiert wird.  
+Dadurch werden instabile Zustandswechsel und ein zyklisches Ein-/Ausschalten von Warnungen vermieden.
 
 ---
 
-### 3.3 `SafetyManager`
-**Rolle:** Überwachung und Schutzfunktionen  
-**Schicht:** Steuerungslogik  
+### 2.3 Erweiterung der Sensor-Simulation
+Der `FillLevelSensor` unterstützt nun:
+- deaktivierbares automatisches Wiederauffüllen
+- manuelles Auffüllen per Benutzereingabe
 
-**Aufgaben:**
-- Prüft Trockenlaufbedingungen  
-- Löst Sicherheitsabschaltung aus  
-- Verwaltet Fail-Safe-Verhalten  
+Dies erhöht die Realitätsnähe der Simulation deutlich.
 
-**Attribute:**
-- `dryRunDetected : bool`  
-
-**Methoden:**
-- `checkDryRun(fillLevel : int, tempRise : float) : bool`  
-- `emergencyShutdown()` – Heizung abschalten  
+Sprint 3 baut vollständig auf der Architektur aus Sprint 2 auf und erweitert diese **ohne Bruch bestehender Schnittstellen**.
 
 ---
 
-### 3.4 `DisplayController`
-**Rolle:** Anzeige der Systemzustände  
-**Schicht:** UserInterface  
+## 3. Klassendiagramm
 
-**Aufgaben:**
-- Aktualisiert die Displayanzeige (Füllstand, Temperatur, Warnungen, Fehler)  
-- Steuert farbliche und symbolische Darstellung  
+![Klassendiagramm](../referenziert/Design/Klassendiagramm_Sprint3.png)
 
-**Attribute:**
-- `fillLevelDisplay : int`  
-- `temperatureDisplay : int`  
-- `warningMessage : string`  
+## 4. Klassenänderungen in Sprint 3
 
-**Methoden:**
-- `updateDisplay(fillLevel : int, temperature : int, status : string)`  
-- `showWarning(message : string)`  
-- `clearDisplay()`  
+### 4.1 `SystemController`
 
----
+**Neue Verantwortlichkeiten:**
 
-### 3.5 `BuzzerController`
-**Rolle:** Akustische Signalisierung  
-**Schicht:** UserInterface  
+* Recovery-Zustandsmaschine
+* Entkoppelte Anzeige-Werte (`lastUiFill_`, `lastUiTemp_`)
+* Manuelle Eingaben (`onFillPressed()`, `onAckPressed()`)
 
-**Aufgaben:**
-- Ausgabe von Warn- und Fehlertönen  
-- Steuerung der Signalarten (kurz/lang)  
+**Neue Attribute (Auszug):**
 
-**Attribute:**
-- `buzzerPin : int`  
-
-**Methoden:**
-- `playWarningTone()`  
-- `playErrorTone()`  
-- `stopTone()`  
+* `waitingForFill`
+* `waitingForAck`
+* `lastUiFill_`
+* `lastUiTemp_`
 
 ---
 
-### 3.6 `InputHandler`
-**Rolle:** Benutzerinteraktion (Taster/Encoder)  
-**Schicht:** UserInterface  
+### 4.2 `SafetyManager`
 
-**Aufgaben:**
-- Liest Eingaben ein  
-- Übermittelt Benutzeraktionen an die Steuerlogik  
+**Erweiterungen:**
 
-**Attribute:**
-- `buttonPin : int`  
-- `buttonState : bool`  
-
-**Methoden:**
-- `readInput() : bool`  
-- `isButtonPressed() : bool`
+* gelatchte Trockenlauf-Erkennung
+* explizite Rücksetzung (`resetDryRun()`)
 
 ---
 
-### 3.7 `FillLevelSensor`
-**Rolle:** Erfassung des Wasserstands  
-**Schicht:** HardwareAbstraction  
+### 4.3 `FillLevelSensor`
 
-**Aufgaben:**
-- Liest analogen Sensorwert  
-- Berechnet Prozentfüllstand  
-- Prüft Messwert auf Plausibilität  
+**Erweiterungen:**
 
-**Attribute:**
-- `analogPin : int`  
-- `fillLevelPercent : int`  
-- `timerService : TimerService` 
+* Abschaltbarer Auto-Refill
+* Manuelles Füllen
 
-**Methoden:**
-- `readLevel() : int`  
-- `isValid() : bool`
+Realistische Abbildung des physikalischen Systems.
 
 ---
 
-### 3.8 `TemperatureSensor`
-**Rolle:** Messung der Temperatur  
-**Schicht:** HardwareAbstraction  
+### 4.4 `DisplayController`
 
-**Aufgaben:**
-- Liest Temperaturwert (NTC oder DS18B20)  
-- Berechnet Temperaturänderungsrate  
+**Erweiterungen:**
 
-**Attribute:**
-- `tempPin : int`  
-- `temperature : float` 
-- `lastTemperature : float`
-- `timerService : TimerService` 
-
-**Methoden:**
-- `readTemperature() : float`  
-- `getDeltaT() : float`
+* separater Status-Text
+* gezieltes Löschen von Warnungen (`clearWarning()`)
 
 ---
 
-### 3.9 `HeaterControl`
-**Rolle:** Steuerung der Heizleistung  
-**Schicht:** HardwareAbstraction  
+## 5. Zentrale Designentscheidungen in Sprint 3
 
-**Aufgaben:**
-- Schaltet Heizelement über Relais oder MOSFET  
-- Prüft Zustand der Heizung  
+### 5.1 Gelatchte Trockenlauf-Erkennung
 
-**Attribute:**
-- `relayPin : int`  
-- `isOn : bool`  
+**Problem vorher:**
+Trockenlauf wurde zyklisch neu berechnet → wechselnde Zustände → Buzzer und Anzeige wirkten instabil.
 
-**Methoden:**
-- `switchOn()`  
-- `switchOff()`  
-- `getStatus() : bool`
+**Lösung:**
+Der `SafetyManager` hält den Trockenlaufzustand **persistent**, bis er explizit zurückgesetzt wird:
+
+* `dryRunDetected` wird **einmal gesetzt**
+* bleibt aktiv bis `resetDryRun()` aufgerufen wird
+
+Fail-Safe-Prinzip: *Ein erkannter Fehler bleibt aktiv, bis der Benutzer handelt.*
 
 ---
 
-### 3.10 `SettingsStorage`
-**Rolle:** Verwaltung persistenter Parameter  
-**Schicht:** PersistenceManager  
+### 5.2 Manueller Recovery-Flow (WAIT_FOR_FILL / WAIT_FOR_ACK)
 
-**Aufgaben:**
-- Laden und Speichern von Grenzwerten und Kalibrierungsdaten  
-- Zugriff auf Fehlerhistorie  
+Nach Trockenlauf schaltet das System in einen **gesperrten Recovery-Modus**:
 
-**Attribute:**
-- `warningThreshold : int`  
-- `criticalThreshold : int`  
+| Zustand         | Bedeutung                             |
+| --------------- | ------------------------------------- |
+| `WAIT_FOR_FILL` | Benutzer muss Wasser nachfüllen (`F`) |
+| `WAIT_FOR_ACK`  | Benutzer bestätigt Neustart (`A`)     |
 
-**Methoden:**
-- `loadSettings()`  
-- `saveSettings()`  
-- `getCalibrationData() : CalibrationData`
+In diesen Zuständen:
+
+* Heizung ist **immer AUS**
+* Anzeige wird **eingefroren**
 
 ---
 
-### 3.11 `CalibrationData`
-**Rolle:** Speicherung der Kalibrierungsdaten  
-**Schicht:** PersistenceManager  
+### 5.3 Erweiterter `FillLevelSensor`
 
-**Aufgaben:**
-- Verwaltung der Füllstands- und Temperaturkennlinien  
-- Bereitstellung von Korrekturwerten für Sensorik  
+Der Füllstandssensor unterstützt nun zwei Betriebsarten:
 
-**Attribute:**
-- `fillCalibValues : int[]`  
-- `tempCalibValues : float[]`  
+* **Auto-Refill aktiv** (Normalbetrieb)
+* **Auto-Refill deaktiviert** (Trockenlauf)
 
-**Methoden:**
-- `getFillCalib() : int[]`  
-- `getTempCalib() : float[]`
+Neue Schnittstellen:
+
+* `setAutoRefillEnabled(bool)`
+* `refillToFull()`
 
 ---
 
-## 4. Beziehungen zwischen den Klassen
+### 5.5 Ereignisbasierte Konsolenausgabe
 
-| **Beziehung** | **Beteiligte Klassen** | **Beschreibung** |
-|----------------|------------------------|------------------|
-| Aggregation | `SystemController` → `FillLevelSensor`, `TemperatureSensor`, `HeaterControl`, `DisplayController` | Zentrale Steuerung besitzt und verwendet diese Komponenten |
-| Assoziation | `SystemController` ↔ `SafetyManager`, `StateDetector` | Logische Zusammenarbeit bei Zustandsprüfung |
-| Komposition | `UserInterface` ↔ `DisplayController`, `BuzzerController`, `InputHandler` | UI besteht aus diesen Subkomponenten |
-| Abhängigkeit | `Steuerungslogik` → `PersistenceManager` | Steuerlogik nutzt gespeicherte Parameter |
-| Aggregation | `SettingsStorage` → `CalibrationData` | Persistenzmodul enthält Kalibrierdatenobjekt |
+Pro Zyklus werden nur **Zustandsänderungen** ausgegeben:
 
----
+* Warnung neu / quittiert
+* Zustandswechsel
+* Heizungsstatus geändert
+* Buzzer gestartet / gestoppt
 
-## 5. Zusammenhang mit Anforderungen
+Technisch:
 
-| **Requirement-ID** | **Betroffene Klassen** | **Beschreibung** |
-|---------------------|------------------------|------------------|
-| R1.1, R1.2 | `FillLevelSensor`, `TemperatureSensor` | Erfassen und Filtern von Messwerten |
-| R2.1–R3.3 | `SystemController`, `StateDetector`, `SafetyManager` | Zustandslogik und Sicherheitsüberwachung |
-| R4.1–R4.3 | `SettingsStorage`, `CalibrationData` | Selbsttest, Fehlerdiagnose, Datenspeicherung |
-| R5.1–R5.5 | `DisplayController`, `BuzzerController`, `InputHandler` | Anzeige, Warnungen und Benutzerinteraktion |
+* Sammeln der Ereignisse in einem `std::vector<std::string>`
+* Ausgabe in einem dedizierten Ereignisblock
+
+Hohe Lesbarkeit bei laufender Simulation.
 
 ---
 
-Das Klassendiagramm gewährleistet eine **klare Trennung der Verantwortlichkeiten** und eine **testbare modulare Struktur**.  
-Durch die Schichtenarchitektur ist das System:
-- **erweiterbar** (z. B. Bluetooth-Diagnose, Logging),
-- **fehlertolerant** (Sicherheitsabschaltung über SafetyManager),
-- **wartbar** (klare Schnittstellen),
-- und **hardwareunabhängig** (dank Abstraktionsschicht).
+### 5.6 Einstellbare Warnschwelle zur Laufzeit
 
-Damit erfüllt die Architektur die funktionalen und nicht-funktionalen Anforderungen aus dem Pflichtenheft vollständig.
+Über die Konsole kann die Warnschwelle dynamisch geändert werden:
 
+* Taste `W`
+* Eingabe eines Prozentwertes (10–50 %)
+* sofortige Wirkung im System
+* Speicherung über `SettingsStorage`
 
-## Sequenzdiagramm
-
-![Sequenzdiagramm](../referenziert/Design/SequenzdiagrammSoftwareEngineering.png)
-
-## 1. Zweck des Sequenzdiagramms
-
-Das Sequenzdiagramm stellt den **Ablauf der Kommunikation zwischen den Systemkomponenten** während eines Trockenlauf-Ereignisses dar.  
-Es visualisiert den **zeitlichen Ablauf** der Interaktionen zwischen **Benutzer, Steuerlogik, Sensorik, Anzeige- und Sicherheitssystemen**, um zu zeigen, wie das System auf einen kritischen Zustand reagiert.
-
-Das Diagramm dient der **Überprüfung der Funktionslogik** und stellt sicher,  
-dass alle Anforderungen aus dem Pflichtenheft, insbesondere die unter **R3.1–R3.3 (Trockenlaufschutz und Sicherheitsabschaltung)**, korrekt umgesetzt sind.
+Direkter Zusammenhang zwischen Benutzeraktion, Anzeige, Buzzer und Systemverhalten.
 
 ---
 
-## 2. Beteiligte Objekte / Akteure
+## 6. Design Patterns in Sprint 3
 
-| **Objekt / Akteur** | **Beschreibung** |
-|----------------------|------------------|
-| **Benutzer** | Startet das Gerät und quittiert Fehlermeldungen. |
-| **DisplayController (UI)** | Zeigt aktuelle Zustände, Warnungen und Fehlermeldungen an. |
-| **SystemController (Control Logic)** | Zentrale Steuerung; koordiniert alle Komponenten und Abläufe. |
-| **SafetyManager (Control Logic)** | Überprüft Sensorwerte auf Trockenlaufbedingungen und führt Sicherheitsabschaltungen aus. |
-| **FillLevelSensor (Hardware)** | Erfasst den aktuellen Wasserstand. |
-| **TemperatureSensor (Hardware)** | Misst die Temperatur der Heizplatte. |
-| **HeaterControl (Hardware)** | Steuert das Heizelement (An/Aus). |
-| **BuzzerController (UI)** | Gibt akustische Warnungen oder Fehlertöne aus. |
-| **SettingsStorage (Persistence)** | Speichert Fehlerereignisse und Systemparameter. |
+### 6.1 Model–View–Controller (MVC)
 
----
+Bleibt das zentrale Architekturpattern:
 
-## 3. Ablaufbeschreibung
+* **Model:** Sensoren, SafetyManager, ThresholdManager
+* **View:** DisplayController, BuzzerController
+* **Controller:** SystemController, InputHandler
 
-### 3.1 Initialisierung
-1. Der **Benutzer** schaltet das Gerät ein.  
-2. Der **DisplayController** zeigt den Startbildschirm.  
-3. Der **SystemController** lädt über den **SettingsStorage** die gespeicherten Schwellenwerte und Kalibrierungsdaten.  
-4. Alle Sensoren werden initialisiert, und das System geht in den Zustand **"Bereit"** über.
+Sprint 3 stärkt MVC durch:
+
+* strengere Entkopplung von Anzeige und Logik
+* klare Zustandsgrenzen
 
 ---
 
-### 3.2 Zyklische Sensordatenerfassung
-1. Der **SystemController** ruft regelmäßig (alle 200 ms) die Werte des **FillLevelSensor** und **TemperatureSensor** ab.  
-2. Diese Messwerte werden gefiltert und an den **SafetyManager** übergeben.  
-3. Der **SafetyManager** berechnet die Änderungsrate der Temperatur (ΔT/Δt) und überprüft den Füllstand.  
+### 6.2 Singleton (konzeptionell)
+
+Die Klassen:
+
+* `SystemController`
+* `SafetyManager`
+* `StateDetector`
+
+werden weiterhin **konzeptionell als Singleton** betrachtet:
+
+* genau eine aktive Instanz
+* global konsistenter Systemzustand
 
 ---
 
-### 3.3 Trockenlauf-Erkennung
-1. Wird erkannt, dass der **Füllstand < 10 %** ist **oder** die Temperatur **mehr als 5 °C/s** steigt, meldet der **SafetyManager** einen Trockenlauf an den **SystemController**.  
-2. Der **SystemController** löst sofort folgende Aktionen aus:
-   - Abschalten der Heizung über den **HeaterControl** (`switchOff()`).
-   - Anzeige der Fehlermeldung „Trockenlauf erkannt“ über den **DisplayController**.
-   - Akustisches Signal (3× langer Ton) über den **BuzzerController**.
-   - Loggen des Ereignisses im **SettingsStorage**.
+### 6.3 Zustandsautomat (State Machine)
+
+Sprint 3 führt explizit eine **Zustandsmaschine** ein:
+
+* Normalbetrieb
+* `WAIT_FOR_FILL`
+* `WAIT_FOR_ACK`
+
+Klare, deterministische Systemübergänge – essenziell für sicherheitskritische Systeme.
 
 ---
 
-### 3.4 Benutzerquittierung
-1. Der **Benutzer** betätigt die Taste „OK“, um die Fehlermeldung zu quittieren.  
-2. Der **InputHandler** meldet die Eingabe an den **SystemController**.  
-3. Der **SystemController** löscht die Anzeige, schaltet das Heizelement wieder frei und wechselt in den Zustand **"Bereit"**.  
+## 7. Sequenzdiagramm
+
+![Sequenzdiagramm](../referenziert/Design/Sequenzdiagramm_Sprint3.png)
+
+### 7.1 Zweck des Sequenzdiagramms
+Das Sequenzdiagramm beschreibt den **Ablauf der Benutzerinteraktion zur Wiederinbetriebnahme des Eierkochers nach einem Trockenlauf**.  
+Der Fokus liegt auf der **Teilfunktionalität „manuelles Füllen und Bestätigen“**, die in Sprint 3 neu eingeführt wurde.
+
+Das Diagramm dient der **Veranschaulichung der Recovery-Logik** und ergänzt die statische Darstellung des Klassendiagramms um den **dynamischen Ablauf**.
 
 ---
 
-## 4. Zeitliche Abfolge (Kurzbeschreibung)
+### 7.2 Beteiligte Komponenten
 
-| **Schritt** | **Aktion** | **Beteiligte Komponenten** |
-|--------------|-------------|-----------------------------|
-| 1 | Systemstart | Benutzer, DisplayController, SystemController |
-| 2 | Laden von Kalibrierungsdaten | SystemController, SettingsStorage |
-| 3 | Sensordaten erfassen | FillLevelSensor, TemperatureSensor |
-| 4 | Trockenlauf erkennen | SafetyManager |
-| 5 | Sicherheitsabschaltung | HeaterControl |
-| 6 | Fehleranzeige & Warnsignal | DisplayController, BuzzerController |
-| 7 | Ereignis speichern | SettingsStorage |
-| 8 | Fehlerquittierung durch Benutzer | InputHandler, SystemController |
-
----
-
-## 5. Fehlerbehandlung und Sicherheitslogik
-
-- Die **Abschaltung** erfolgt **innerhalb von ≤ 1 s** nach Erkennung der Trockenlaufbedingung.  
-- Bei Sensorausfall oder unplausiblen Werten wird der gleiche Sicherheitsmechanismus ausgelöst.  
-- Der **SafetyManager** arbeitet nach dem **Fail-Safe-Prinzip**:  
-  Jede Unsicherheit führt zu einem sicheren Zustand (Heizung aus, Warnung aktiv).  
-- Nach erfolgreicher Quittierung wird der **Normalbetrieb** automatisch wieder aufgenommen.
+| Komponente | Rolle |
+|-----------|-------|
+| **User** | Führt manuelle Aktionen aus (Füllen, Bestätigen) |
+| **main.cpp** | Erfasst Tasteneingaben (`F`, `A`) |
+| **SystemController** | Koordiniert Zustandsübergänge und Systemreaktionen |
+| **FillLevelSensor** | Simuliert das manuelle Auffüllen des Wassers |
+| **SafetyManager** | Verwaltet den Trockenlaufzustand |
+| **HeaterControl** | Schaltet die Heizung sicher ab |
+| **DisplayController** | Zeigt Warnungen und Benutzerhinweise an |
+| **BuzzerController** | Gibt akustische Warn- und Fehlersignale aus |
 
 ---
 
-## 6. Bezug zu Requirements
+### 7.3 Ablaufbeschreibung
 
-| **Requirement-ID** | **Beschreibung** | **Abgebildet durch** |
-|--------------------|------------------|----------------------|
-| **R3.1** | Trockenlaufabschaltung bei Füllstand < 10 % oder Temperaturanstieg > 5 °C/s | SafetyManager, SystemController |
-| **R3.2** | Warnanzeige & akustisches Signal bei Trockenlauf | DisplayController, BuzzerController |
-| **R3.3** | Speicherung des Fehlers und Reaktivierung nach Quittierung | SettingsStorage, InputHandler |
-| **R4.2** | Fehlerklassifizierung und Sicherheitsreaktion | SafetyManager |
-| **R5.1–R5.4** | Benutzerinteraktion & Anzeige | UserInterface-Komponenten |
+#### 7.3.1 Trockenlauf-Erkennung
+Wird ein Trockenlauf erkannt, schaltet das System in den Zustand **`WAIT_FOR_FILL`**:
+- Die Heizung wird abgeschaltet.
+- Eine Fehlermeldung wird angezeigt.
+- Ein akustischer Fehlerton wird aktiviert.
+- Ein automatischer Neustart ist nicht möglich.
 
 ---
 
-Das Sequenzdiagramm verdeutlicht, wie der **Trockenlaufschutz** technisch abläuft und welche Komponenten beteiligt sind.  
-Durch den klar strukturierten Ablauf wird sichergestellt, dass:
+#### 7.3.2 Manuelles Füllen
+Der Benutzer füllt Wasser nach und bestätigt dies über die Taste **`F`**:
+- Der Füllstand wird manuell auf 100 % gesetzt.
+- Das System wechselt in den Zustand **`WAIT_FOR_ACK`**.
+- Anzeige und Sensorwerte bleiben eingefroren.
 
-- Sicherheitsfunktionen **deterministisch und zeitnah** ausgeführt werden,  
-- alle Systemzustände für den Benutzer **verständlich visualisiert** sind,  
-- das System **robust und fehlertolerant** auf Sensorfehler reagiert,  
-- und das Verhalten den **funktionalen Anforderungen (R1–R5)** aus dem Pflichtenheft vollständig entspricht.
+---
 
-Damit dient das Sequenzdiagramm als **Beleg der dynamischen Systemarchitektur** und zeigt die **Interaktion zwischen Softwaremodulen und Hardware** während des sicherheitskritischen Betriebsfalls.
+#### 7.3.3 Bestätigung / Neustartfreigabe
+Durch Drücken der Taste **`A`** quittiert der Benutzer den Fehler:
+- Der Trockenlaufzustand wird zurückgesetzt.
+- Die Warnanzeige und der Buzzer werden deaktiviert.
+- Der Normalbetrieb wird wieder freigegeben.
 
+---
 
-## Kommunikationsdiagramm
+### 7.4 Bezug zu Requirements
+
+| Requirement | Abdeckung |
+|------------|-----------|
+| **R5.4** | Fehlermeldung Trockenlauf und explizite Benutzerquittierung |
+| **R5.5** | Akustisches Warnsignal während des gesamten Fehlerzustands |
+| **R3.x** | Sicheres Abschalten und kontrollierte Wiederinbetriebnahme |
+
+---
+
+## 8. Kommunikationsdiagramm
 
 ![Kommunikationsdiagramm](../referenziert/Design/Kommunikationsdiagramm2.png)
 
-## 1. Ziel des Diagramms
+### 8.1 Ziel des Diagramms
+
 Das Kommunikationsdiagramm zeigt die **Interaktion und Nachrichtenflüsse** zwischen den Hauptkomponenten des Systems  
-während eines **Trockenlauf-Ereignisses**.  
-Im Gegensatz zum Sequenzdiagramm steht hier nicht die zeitliche Reihenfolge,  
-sondern die **kommunikative Verknüpfung** der Module im Vordergrund.  
-Es verdeutlicht, wie die Schichten **UserInterface**, **ControlLogic**, **HardwareAbstraction** und **PersistenceManager**  
-gemeinsam den sicherheitskritischen Fall „Trockenlauf erkannt“ verarbeiten.
+während eines sicherheitskritischen Ereignisses (Trockenlauf, Überhitzung, Sensorfehler) und berücksichtigt die in Sprint 2 eingeführten Mechanismen:
 
 ---
 
-## 2. Beteiligte Komponenten
+### 8.2 Beteiligte Komponenten
 
-| **Komponente** | **Rolle / Funktion** |
-|----------------|----------------------|
-| **User (Aktor)** | Startet und quittiert den Prozess (z. B. Einschalten, OK-Taste). |
-| **UserInterface (Display & Buzzer)** | Visualisiert Warnungen, zeigt Fehler an und gibt akustische Signale aus. |
-| **ControlLogic (SystemController & SafetyManager)** | Zentrale Steuerung, Zustandsüberwachung und Sicherheitsabschaltung. |
-| **HardwareAbstraction (Sensorik & Heizung)** | Liest Sensordaten aus (Füllstand, Temperatur) und schaltet die Heizung. |
-| **PersistenceManager (Datenspeicherung)** | Speichert Schwellenwerte, Kalibrierungen und Fehlerhistorie. |
-
----
-
-## 3. Ablaufbeschreibung
-
-1. **Initialisierung:**  
-   Der Benutzer schaltet das Gerät ein.  
-   → `UserInterface` informiert die `ControlLogic`, welche über den `PersistenceManager` gespeicherte Einstellungen lädt.  
-
-2. **Sensordatenerfassung:**  
-   `ControlLogic` fragt über `HardwareAbstraction` die Sensoren ab (Füllstand, Temperatur).  
-
-3. **Trockenlauf-Erkennung:**  
-   Der `SafetyManager` innerhalb der `ControlLogic` erkennt den Trockenlauf (Füllstand < 10 % oder Temperaturanstieg > 5 °C/s).  
-   → Heizung wird deaktiviert, Warnungen und Töne werden aktiviert, Ereignis wird gespeichert.  
-
-4. **Benutzerinteraktion:**  
-   Der Benutzer bestätigt den Fehler über die Taste **OK**.  
-   → Anzeige wird gelöscht, System kehrt in den Zustand „Bereit“ zurück, Heizung wird wieder freigegeben.
+| **Komponente**        | **Rolle / Funktion** |
+|-----------------------|----------------------|
+| **User (Aktor)**      | Startet das Gerät, kann Warnsignale stummschalten. |
+| **UserInterface**     | `DisplayController`, `BuzzerController`, `InputHandler` – Visualisierung und akustische Signale, Eingabe. |
+| **ControlLogic**      | `SystemController`, `StateDetector`, `SafetyManager`, `ThresholdManager` – Zentrale Steuer- und Sicherheitslogik. |
+| **HardwareAbstraction** | `FillLevelSensor`, `TemperatureSensor`, `HeaterControl`, `TimerService` – Simulation von Sensorik und Aktorik. |
+| **PersistenceManager**| `SettingsStorage`, `CalibrationData` – Bereitstellung von Schwellwerten und Kalibrierdaten. |
 
 ---
 
-## 4. Kommunikationsstruktur (Kurzüberblick)
+### 8.3 Ablaufbeschreibung
 
-| **Absender** | **Empfänger** | **Nachricht / Aktion** |
-|---------------|----------------|-------------------------|
-| `User` | `UserInterface` | Gerät einschalten / Taste OK drücken |
-| `UserInterface` | `ControlLogic` | `initSystem()`, `acknowledgeError()` |
-| `ControlLogic` | `PersistenceManager` | `loadSettings()`, `logEvent()` |
-| `ControlLogic` | `HardwareAbstraction` | `readFillLevel()`, `readTemperature()`, `switchOffHeater()` |
-| `ControlLogic` | `UserInterface` | `displayWarning()`, `playErrorTone()`, `clearDisplay()` |
+1. **Initialisierung & Laden der Einstellungen:**  
+   - `ControlLogic` ruft `SettingsStorage.loadSettings()` auf und setzt die Schwellwerte im `ThresholdManager`.  
 
----
+2. **Sensordatenerfassung und Zustandsdetektion:**  
+   - `ControlLogic` fordert zyklisch über `HardwareAbstraction` Füllstand (`readLevel()`) und Temperatur (`readTemperature()`, `getDeltaT()`) an.  
+   - `StateDetector.detectState()` liefert den logischen Zustand.  
 
-## 5. Bezug zu Requirements
+3. **Plausibilitäts- und Fehlerprüfung:**  
+   - Zu Beginn: `SystemController.performStartupPlausibilityCheck(...)` prüft initiale Werte.  
+   - Laufend: `SystemController` prüft Sensorvalidität und Temperaturbereiche; `SafetyManager.checkDryRun(...)` erkennt Trockenlauf.  
 
-| **Requirement-ID** | **Abgebildet durch Kommunikation zwischen** | **Beschreibung** |
-|--------------------|----------------------------------------------|------------------|
-| **R1.1–R1.2** | ControlLogic ↔ HardwareAbstraction | Erfassen von Füllstand und Temperatur |
-| **R2.1–R3.3** | ControlLogic ↔ SafetyManager ↔ UI | Zustandslogik und Trockenlaufabschaltung |
-| **R4.1–R4.3** | ControlLogic ↔ PersistenceManager | Selbsttest, Kalibrierung, Fehlerlogging |
-| **R5.1–R5.5** | User ↔ UI ↔ ControlLogic | Anzeige, Warnsignale, Benutzerquittierung |
+4. **Sicherheitsreaktion und Fehlerklassifizierung:**  
+   - Bei Fehlern oder Grenzwertverletzungen:  
+     - `HeaterControl.switchOff()` oder `emergencyShutdown(heater)`  
+     - `DisplayController.showWarning("...")` mit der passenden Fehlermeldung  
+     - `BuzzerController.playWarningTone()` bzw. `playErrorTone()`  
 
----
+5. **Selbsttest:**  
+   - `SystemController.runSelfTest(...)` prüft periodisch, ob sich Sensorwerte verändern und meldet Abweichungen entsprechend.  
 
-Das Kommunikationsdiagramm zeigt die **strukturierte Zusammenarbeit** aller Systemkomponenten:  
-- **ControlLogic** ist der zentrale Koordinator,  
-- **HardwareAbstraction** liefert Messwerte,  
-- **UserInterface** meldet Zustände an den Benutzer,  
-- **PersistenceManager** sichert Daten dauerhaft.  
-
-Diese Architektur gewährleistet **klare Schnittstellen, hohe Testbarkeit** und erfüllt alle sicherheitsrelevanten Anforderungen  
-zum **Trockenlaufschutz (R3.1–R3.3)** aus dem Pflichtenheft.
-
-## Design Pattern
-
-## 1. Model-View-Controller (MVC)
-
-**Art:** Architektur-Pattern  
-**Verwendung:** Zentrales Entwurfsmuster des Systems
-
-### Beschreibung
-Das gesamte System folgt dem **MVC-Prinzip**, um **Darstellung, Logik und Hardwarezugriff klar zu trennen**.
-
-| Schicht | Komponenten / Klassen | Aufgabe |
-|----------|-----------------------|----------|
-| **Model** | `SystemController`, `SafetyManager`, `StateDetector`, `FillLevelSensor`, `TemperatureSensor`, `HeaterControl` | Verwaltung von Zuständen, Logik und Sensordaten |
-| **View** | `DisplayController`, `BuzzerController` | Darstellung von Systemzuständen, Warnungen und Fehlern |
-| **Controller** | `InputHandler`, `SystemController` | Vermittlung zwischen Benutzerinteraktion, Anzeige und Logik |
-
-### Vorteile
-- Klare Trennung der Verantwortlichkeiten  
-- Einfach test- und wartbar  
-- Erweiterbar (z. B. neue Anzeige oder neue Sensoren)
+6. **Benutzerinteraktion:**  
+   - `InputHandler.readInput()` liefert Tasterereignisse an `SystemController`.  
+   - Bei erkannter Eingabe stoppt `SystemController` z. B. den Ton (`BuzzerController.stopTone()`).
 
 ---
 
-## 1. Singleton
+### 8.4 Kommunikationsstruktur (Kurzüberblick)
 
-**Art:** Erzeugungs-Pattern  
-**Verwendung:** In der Klasse `SystemController`,  `SafetyManager`, `StateDetector`
-
-### Vorteile
-- Zentrale Steuerinstanz  
-- Einheitlicher Zugriff auf Systemstatus  
-- Vermeidung von Mehrfachinstanzen und widersprüchlichen Zuständen
-
----
-
-| Klasse             | Aufgabe                                    | Grund für Singleton                                     |
-| ------------------ | ------------------------------------------ | ------------------------------------------------------- |
-| `SystemController` | Zentrale Ablaufsteuerung und Koordination  | Nur eine Systeminstanz darf steuern                     |
-| `SafetyManager`    | Sicherheitsüberwachung und Abschaltung     | Nur eine Instanz darf Sicherheitsentscheidungen treffen |
-| `StateDetector`    | Zustandsanalyse und Systemstatus-Erkennung | Einheitlicher, globaler Systemzustand erforderlich      |
-
-
-## 2. Command
-
-**Art:** Verhaltens-Pattern  
-**Verwendung:** Konzeptuell in `InputHandler` vorbereitet
-
-### Beschreibung
-Das Command-Pattern ist vorbereitet, um Benutzeraktionen als **Befehle** zu kapseln.  
-So könnte z. B. ein Tastendruck (`OK`) als eigenes Kommando-Objekt (`AcknowledgeErrorCommand`) umgesetzt werden.  
-Dieses kann unabhängig von der Steuerlogik ausgeführt oder erweitert werden.
-
-### Vorteile
-- Entkopplung von Eingabe und Logik  
-- Leichte Erweiterbarkeit (neue Befehle, z. B. Reset, Diagnose)  
-- Saubere Trennung von Event-Verarbeitung und Systemreaktion
-
----
+| **Absender**    | **Empfänger**        | **Nachricht / Aktion**                              |
+|-----------------|----------------------|-----------------------------------------------------|
+| `User`          | `UserInterface`      | Gerät einschalten, Taste betätigen                 |
+| `ControlLogic`  | `PersistenceManager` | `loadSettings()`                                   |
+| `ControlLogic`  | `HardwareAbstraction`| `readLevel()`, `readTemperature()`, `switchOn()`, `switchOff()` |
+| `ControlLogic`  | `UserInterface`      | `updateDisplay(...)`, `showWarning(...)`, `playWarningTone()`, `playErrorTone()`, `stopTone()` |
+| `UserInterface` | `ControlLogic`       | Tasterzustände über `readInput()`                  |

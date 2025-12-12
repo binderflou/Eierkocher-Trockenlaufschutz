@@ -1,282 +1,449 @@
-# Design
+# Design 2
+
 ## Klassendiagramm
 
 ![Klassendiagramm](../referenziert/Design/Klassendiagramm_Sprint2.png)
 
 ## 1. Zweck des Klassendiagramms
+
 Das Klassendiagramm beschreibt die objektorientierte Struktur der Software für den **Trockenlaufschutz eines Eierkochers**.  
 Es dient der logischen Modellierung aller wesentlichen Systemkomponenten und stellt deren **Verantwortlichkeiten, Attribute, Methoden und Beziehungen** dar.  
-Die Architektur folgt dem **Schichtenmodell** aus:
+
+Die Architektur folgt weiterhin dem **Schichtenmodell**:
 
 - **UserInterface** (Anzeige, Ton, Eingabe)  
-- **Steuerungslogik** (Systemsteuerung, Zustandsmanagement, Sicherheit)  
+- **Steuerungslogik (ControlLogic)** (Systemsteuerung, Zustandsmanagement, Sicherheit)  
 - **HardwareAbstraction** (Sensor- und Aktorsteuerung)  
 - **PersistenceManager** (Datenspeicherung und Kalibrierung)
 
-Dieses Diagramm bildet die Grundlage für die Implementierung auf einem **Arduino Nano** mit C++.
+Mit **Sprint 2** wird die bereits funktionierende Grundlogik aus Sprint 1 um sicherheitsrelevante Funktionen erweitert. Im Fokus stehen dabei insbesondere die Anforderungen:
+
+- **R2.2** Kontinuierlicher Soll/Ist-Vergleich, Sicherheitsmodus  
+- **R2.3** Fehleranalyse: Sensorfehler, Überhitzung  
+- **R4.1** Plausibilitätsprüfung beim Einschalten  
+- **R4.2** Fehlerklassifizierung  
+- **R4.3** Zyklischer Selbsttest
+
+Diese Anforderungen werden vor allem in der **Steuerungslogik** (SystemController, SafetyManager, StateDetector, ThresholdManager) umgesetzt.
+
+Die Implementierung erfolgt weiterhin in **C++** in einer Arduino-ähnlichen Umgebung.
 
 ---
 
 ## 2. Überblick über die Struktur
+
 Die Software besteht aus vier Hauptschichten mit den zugehörigen Klassen:
 
-| **Schicht** | **Klassen** | **Beschreibung** |
-|--------------|-------------|------------------|
-| **UserInterface** | `DisplayController`, `BuzzerController`, `InputHandler` | Verwaltung von Anzeige, akustischer Signalisierung und Benutzereingaben |
-| **Steuerungslogik** | `SystemController`, `StateDetector`, `SafetyManager`, `ThresholdManager` | Zentrale Steuerung, Zustandsüberwachung und Sicherheitslogik |
-| **HardwareAbstraction** | `FillLevelSensor`, `TemperatureSensor`, `HeaterControl`, `TimerService` | Ansteuerung und Abstraktion der Sensoren und Aktoren |
-| **PersistenceManager** | `CalibrationData`, `SettingsStorage` | Verwaltung von Kalibrierungsdaten und Persistenzspeicherung |
+| **Schicht**           | **Klassen**                                                                 | **Beschreibung**                                                                                             |
+|-----------------------|-----------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------|
+| **UserInterface**     | `DisplayController`, `BuzzerController`, `InputHandler`                    | Verwaltung von Anzeige, akustischer Signalisierung und Benutzereingaben                                     |
+| **Steuerungslogik**   | `SystemController`, `StateDetector`, `SafetyManager`, `ThresholdManager`   | Zentrale Steuerung, Zustandsüberwachung, Sicherheitslogik, Schwellwertverwaltung                            |
+| **HardwareAbstraction** | `FillLevelSensor`, `TemperatureSensor`, `HeaterControl`, `TimerService`  | Ansteuerung und Abstraktion der Sensoren und Aktoren, zeitgesteuerte Simulation                             |
+| **PersistenceManager**| `CalibrationData`, `SettingsStorage`                                      | Verwaltung von Kalibrierungsdaten und persistenten Schwellwerten (Warn-/Kritisch-Schwellen)                 |
+
+In Sprint 2 werden vor allem **SystemController**, **SafetyManager**, **StateDetector**, **ThresholdManager** sowie die enge Kopplung zu **SettingsStorage**, **FillLevelSensor** und **TemperatureSensor** erweitert, um die sicherheitskritischen Anforderungen umzusetzen.
 
 ---
 
 ## 3. Klassendokumentation
 
 ### 3.1 `SystemController`
-**Rolle:** Hauptsteuerung der Anwendung  
+
+**Rolle:** Hauptsteuerung der Anwendung, Sicherheits- und Überwachungslogik  
 **Schicht:** Steuerungslogik  
 
 **Aufgaben:**
-- Führt den Hauptzyklus (`loop`) aus  
-- Liest Sensordaten ein  
-- Prüft Zustände und Sicherheitsbedingungen  
-- Steuert Anzeige, Summer und Heizung  
 
-**Attribute:**
-- `fillSensor : FillLevelSensor`  
-- `tempSensor : TemperatureSensor`  
-- `heater : HeaterControl`  
-- `ui : DisplayController`  
-- `buzzer : BuzzerController`  
+- Führt den zentralen Steuerungszyklus `executeCycle()` aus  
+- Liest Sensordaten (Füllstand, Temperatur) ein  
+- Führt den **kontinuierlichen Soll/Ist-Vergleich** gegen Warn- und Kritisch-Schwellen durch (**R2.2**)  
+- Nutzt `StateDetector`, um den logischen Systemzustand zu bestimmen  
+- Stellt sicherheitskritische Funktionen bereit:
+  - **Plausibilitätsprüfung beim Einschalten** via `performStartupPlausibilityCheck(...)` (**R4.1**)  
+  - Überwachung auf **Sensorfehler** und Wechsel in einen **Sicherheitsmodus** via `enterSafetyMode(...)` (**R2.2, R4.2**)  
+  - **Überhitzungserkennung** (Temperatur > Schwellwert) in Kombination mit `SafetyManager` (**R2.3**)  
+  - **Zyklischer Selbsttest** auf stagnierende Messwerte via `runSelfTest(...)` (**R4.3**)  
+- Steuert Anzeige (`DisplayController`), Buzzer (`BuzzerController`) und Heizung (`HeaterControl`)  
+- Verarbeitet Benutzereingaben über `InputHandler` (z. B. zum Stummschalten von Warnsignalen)
 
-**Methoden:**
-- `setup()` – Initialisierung von Komponenten  
-- `executeCycle()` – Ablaufsteuerung  
-- `handleError(errorCode : int)` – Fehlerbehandlung  
-- `updateSystemState()` – Zustandslogik aktualisieren  
+**Wichtige Attribute (Auszug):**
+
+- Referenzen auf Hardware- und UI-Klassen:
+  - `fillSensor : FillLevelSensor&`  
+  - `tempSensor : TemperatureSensor&`  
+  - `heater : HeaterControl&`  
+  - `uiController : DisplayController&`  
+  - `buzzerController : BuzzerController&`  
+  - `inputHandler : InputHandler&`  
+- Logik-Komponenten:
+  - `stateDetector : StateDetector&`  
+  - `safetyManager : SafetyManager&`  
+  - `thresholdManager : ThresholdManager&`  
+  - `settingsStorage : SettingsStorage&`  
+- Sicherheits-/Überwachungszustände:
+  - `startupChecked : bool` – wurde die Start-Plausibilitätsprüfung erfolgreich durchgeführt? (**R4.1**)  
+  - `safetyModeActive : bool` – ist das System aktuell im Sicherheitsmodus? (**R2.2**)  
+  - `lastFillLevel : int` – letzter Füllstand, u. a. für Reset der Temperatur  
+  - `lastSelfTest : std::chrono::steady_clock::time_point` – Zeitstempel des letzten Selbsttests (**R4.3**)  
+  - `lastChangeTimestamp : std::chrono::steady_clock::time_point` – Zeitstempel der letzten relevanten Wertänderung (**R4.3**)  
+  - `lastObservedFill : int`  
+  - `lastObservedTemperature : float`  
+
+**Methoden (öffentlich):**
+
+- `SystemController(...)` – Konstruktor, lädt Einstellungen aus `SettingsStorage` und initialisiert Schwellwerte  
+- `void executeCycle()` – zentraler Steuerungszyklus; beinhaltet:
+  - Messwerterfassung  
+  - Start-Plausibilitätscheck  
+  - Sensorvalidierung und Sicherheitsmodus  
+  - Zustandsdetektion  
+  - Überhitzungserkennung  
+  - Trockenlaufprüfung und Schwellwertlogik  
+  - Display-Update und Buzzer-Steuerung  
+  - zyklischen Selbsttest (**R2.2, R2.3, R4.1, R4.3**)  
+- `void updateSystemState(int fillLevel, float temperature)` – delegiert Zustandsbestimmung an `StateDetector`  
+- `void handleError(int errorCode)` – generische Fehlerbehandlung (Heizung aus, Fehlerton, Fehlertext im Display)
+
+**Methoden (privat, aber requirementsrelevant):**
+
+- `bool performStartupPlausibilityCheck(int fillLevel, float temperature)`  
+  - Prüft beim ersten Zyklus, ob Füllstand und Temperatur in einem erwartbaren Bereich liegen (**R4.1**)  
+- `void enterSafetyMode(const std::string &reason)`  
+  - Aktiviert Sicherheitsmodus, schaltet Heizung ab, zeigt Klassifizierung im Display (Fehlermeldung) und spielt einen Fehlerton (**R2.2, R4.2**)  
+- `void runSelfTest(int fillLevel, float temperature)`  
+  - Für alle 30 s (**R4.3**): Prüft, ob sich die Werte in einem Zeitraum von 10 s nennenswert verändert haben.  
+  - Falls nicht, wird eine Selbsttest-Warnung ausgegeben (`showWarning(...)`, Warnton).
 
 ---
 
 ### 3.2 `StateDetector`
-**Rolle:** Erkennung des aktuellen Systemzustands (Bereit, Warnung, Trockenlauf, Fehler)  
+
+**Rolle:** Erkennung des aktuellen Systemzustands (z. B. „Heating“, „LowFill“, „Boiling“)  
 **Schicht:** Steuerungslogik  
 
 **Aufgaben:**
+
 - Auswertung von Füllstand und Temperatur  
-- Rückgabe eines logischen Zustands zur Anzeige und Steuerung  
+- Rückgabe eines logischen Zustands, der für Anzeige und Logging genutzt werden kann  
+- Unterstützung des kontinuierlichen Soll/Ist-Vergleichs durch eine klare Zustandsklassifizierung (**R2.2**)
 
 **Attribute:**
-- `currentState : string`  
-- `fillLevel : int`  
-- `temperature : float`  
+
+- `currentState : std::string` – zuletzt ermittelter Systemzustand  
 
 **Methoden:**
-- `detectState(fillLevel : int, temperature : float) : string`  
-- `getState() : string`
+
+- `std::string detectState(int fillLevel, float temperature)`  
+  - Einfache Heuristik, z. B.:  
+    - `fillLevel <= 10` → `"LowFill"`  
+    - `temperature >= 100.0f` → `"Boiling"`  
+    - sonst `"Heating"`  
+- `std::string getState() const` – liefert den letzten Zustand, u. a. für die Anzeige
 
 ---
 
 ### 3.3 `SafetyManager`
-**Rolle:** Überwachung und Schutzfunktionen  
+
+**Rolle:** Überwachung auf Trockenlauf und Einleitung der Notabschaltung  
 **Schicht:** Steuerungslogik  
 
 **Aufgaben:**
-- Prüft Trockenlaufbedingungen  
-- Löst Sicherheitsabschaltung aus  
-- Verwaltet Fail-Safe-Verhalten  
+
+- Analysiert Füllstand und Temperaturänderung, um einen **Trockenlauf** zu erkennen (**R2.3**)  
+- Unterstützt den SystemController bei der Einleitung von Sicherheitsmaßnahmen (**R2.2**)  
+- Trägt zur Fehleranalyse und Fehlerklassifizierung „Trockenlauf“ bei (**R4.2**)
 
 **Attribute:**
-- `dryRunDetected : bool`  
+
+- `dryRunDetected : bool` – Merker, ob Trockenlauf erkannt wurde
 
 **Methoden:**
-- `checkDryRun(fillLevel : int, tempRise : float) : bool`  
-- `emergencyShutdown()` – Heizung abschalten  
+
+- `bool checkDryRun(int fillLevel, float tempRise)`  
+  - Implementiert Trockenlaufkriterium (z. B. Füllstand < 5 % und Temperaturanstieg > 5 °C pro Intervall)  
+- `void emergencyShutdown(hardware::HeaterControl &heater)`  
+  - Schaltet die Heizung ab, wenn zuvor ein Trockenlauf erkannt wurde  
+- `bool isDryRunDetected() const` – fragt den internen Status ab
 
 ---
 
 ### 3.4 `DisplayController`
-**Rolle:** Anzeige der Systemzustände  
+
+**Rolle:** Anzeige der Systemzustände und Fehlermeldungen  
 **Schicht:** UserInterface  
 
 **Aufgaben:**
-- Aktualisiert die Displayanzeige (Füllstand, Temperatur, Warnungen, Fehler)  
-- Steuert farbliche und symbolische Darstellung  
+
+- Darstellung von Füllstand, Temperatur und Status  
+- Anzeige von Warn- und Fehlermeldungen (Fehlerklassifizierung auf UI-Ebene, **R4.2**)  
+- Visualisierung von Ergebnissen der Selbsttests (**R4.3**)  
 
 **Attribute:**
-- `fillLevelDisplay : int`  
-- `temperatureDisplay : int`  
-- `warningMessage : string`  
+
+- `fillLevelDisplay : int` – zuletzt angezeigter Füllstand  
+- `temperatureDisplay : int` – zuletzt angezeigte Temperatur  
+- `warningMessage : std::string` – aktuell angezeigte Warn- oder Fehlermeldung  
 
 **Methoden:**
-- `updateDisplay(fillLevel : int, temperature : int, status : string)`  
-- `showWarning(message : string)`  
-- `clearDisplay()`  
+
+- `void updateDisplay(int fillLevel, int temperature, const std::string &status)`  
+- `void showWarning(const std::string &message)`  
+- `void clearDisplay()`  
+- `int getFillLevelDisplay() const`  
+- `int getTemperatureDisplay() const`  
+- `std::string getWarningMessage() const`
 
 ---
 
 ### 3.5 `BuzzerController`
+
 **Rolle:** Akustische Signalisierung  
 **Schicht:** UserInterface  
 
 **Aufgaben:**
+
 - Ausgabe von Warn- und Fehlertönen  
-- Steuerung der Signalarten (kurz/lang)  
+- Differenzierung zwischen **Warnsignal** (z. B. niedrigem Füllstand, Selbsttest-Warnung) und **Fehlersignal** (z. B. Trockenlauf, Überhitzung, Plausibilitätsfehler)  
+- Unterstützung der Fehlerklassifizierung durch unterschiedliche Signaltöne (**R4.2**)  
 
 **Attribute:**
-- `buzzerPin : int`  
+
+- `buzzerPin : int` – simulierter Pin  
+- `playing : bool` – ist aktuell ein Ton aktiv?
 
 **Methoden:**
-- `playWarningTone()`  
-- `playErrorTone()`  
-- `stopTone()`  
+
+- `void playWarningTone()`  
+- `void playErrorTone()`  
+- `void stopTone()`  
+- `bool isPlaying() const`
 
 ---
 
 ### 3.6 `InputHandler`
-**Rolle:** Benutzerinteraktion (Taster/Encoder)  
+
+**Rolle:** Benutzerinteraktion (z. B. Taster)  
 **Schicht:** UserInterface  
 
 **Aufgaben:**
-- Liest Eingaben ein  
-- Übermittelt Benutzeraktionen an die Steuerlogik  
+
+- Einlesen von Benutzereingaben  
+- Weiterleitung der Information an die Steuerlogik  
+- In der aktuellen Implementierung: Nutzen der Eingabe, um akustische Signale zu stoppen (Buzzer stummschalten)
 
 **Attribute:**
-- `buttonPin : int`  
-- `buttonState : bool`  
+
+- `buttonPin : int` – simulierter Taster-Pin  
+- `buttonState : bool` – letzter Tasterzustand  
 
 **Methoden:**
-- `readInput() : bool`  
-- `isButtonPressed() : bool`
+
+- `bool readInput()` – liest die Eingabe und erkennt z. B. Flanken  
+- `bool isButtonPressed() const`
 
 ---
 
 ### 3.7 `FillLevelSensor`
+
 **Rolle:** Erfassung des Wasserstands  
 **Schicht:** HardwareAbstraction  
 
 **Aufgaben:**
-- Liest analogen Sensorwert  
-- Berechnet Prozentfüllstand  
-- Prüft Messwert auf Plausibilität  
+
+- Liefert simulierte Füllstandswerte (0–100 %)  
+- Nutzt `TimerService`, um die Simulation zeitgesteuert zu aktualisieren  
+- Stellt mit `isValid()` sicher, dass mindestens ein gültiger Messwert vorliegt (relevant für R2.2 und R4.1 im Zusammenspiel mit `SystemController`)
 
 **Attribute:**
-- `analogPin : int`  
-- `fillLevelPercent : int`  
-- `timerService : TimerService` 
+
+- `analogPin : int` – simulierter Analogeingang  
+- `fillLevelPercent : int` – aktueller Füllstand in Prozent  
+- `valid : bool` – true, sobald mindestens ein gültiger Wert gelesen wurde  
+- `timerService : std::shared_ptr<TimerService>` – Timer für zeitgesteuerte Simulation  
 
 **Methoden:**
-- `readLevel() : int`  
-- `isValid() : bool`
+
+- `int readLevel()` – liefert aktuellen Füllstand; aktualisiert den Simulationswert nur in bestimmten Intervallen  
+- `bool isValid() const` – gibt an, ob bereits ein plausibler Wert vorliegt
 
 ---
 
 ### 3.8 `TemperatureSensor`
+
 **Rolle:** Messung der Temperatur  
 **Schicht:** HardwareAbstraction  
 
 **Aufgaben:**
-- Liest Temperaturwert (NTC oder DS18B20)  
-- Berechnet Temperaturänderungsrate  
+
+- Liefert simulierte Temperaturwerte  
+- Ermittelt die Temperaturänderungsrate ΔT (**R1.2**, genutzt in **R2.3** Trockenlauf)  
+- Kann bei bestimmten Füllstandsereignissen (z. B. Tank-Refill) zurückgesetzt werden, um ΔT wieder sinnvoll zu berechnen
 
 **Attribute:**
-- `tempPin : int`  
-- `temperature : float` 
-- `lastTemperature : float`
-- `timerService : TimerService` 
+
+- `tempPin : int` – simulierter Temperatur-Sensorpin  
+- `temperature : float` – aktuelle Temperatur  
+- `lastTemperature : float` – Temperatur der letzten Messung  
+- `timerService : std::shared_ptr<TimerService>` – Timer für zeitgesteuerte Simulation  
 
 **Methoden:**
-- `readTemperature() : float`  
-- `getDeltaT() : float`
+
+- `float readTemperature()` – liefert aktuelle (simulierte) Temperatur  
+- `void resetTemperature()` – setzt die Temperaturwerte zurück (z. B. bei Füllstands-Reset)  
+- `float getDeltaT() const` – Temperaturänderung seit der letzten Aktualisierung
 
 ---
 
 ### 3.9 `HeaterControl`
+
 **Rolle:** Steuerung der Heizleistung  
 **Schicht:** HardwareAbstraction  
 
 **Aufgaben:**
-- Schaltet Heizelement über Relais oder MOSFET  
-- Prüft Zustand der Heizung  
+
+- Schaltung des Heizelements (An/Aus)  
+- Unterstützt Sicherheitsabschaltungen (Trockenlauf, Überhitzung, Fehlermodus)
 
 **Attribute:**
-- `relayPin : int`  
-- `isOn : bool`  
+
+- `relayPin : int` – simulierter Pin  
+- `isOn : bool` – aktueller Heizungsstatus  
 
 **Methoden:**
-- `switchOn()`  
-- `switchOff()`  
-- `getStatus() : bool`
+
+- `void switchOn()`  
+- `void switchOff()`  
+- `bool getStatus() const`
 
 ---
 
 ### 3.10 `SettingsStorage`
+
 **Rolle:** Verwaltung persistenter Parameter  
 **Schicht:** PersistenceManager  
 
 **Aufgaben:**
-- Laden und Speichern von Grenzwerten und Kalibrierungsdaten  
-- Zugriff auf Fehlerhistorie  
+
+- Laden und Speichern von Warn- und Kritisch-Schwellen für den Füllstand  
+- Verwaltung von Kalibrierungsdaten für Sensorik  
+- Grundlage für den kontinuierlichen Soll/Ist-Vergleich (**R2.2**) durch Bereitstellung der Schwellwerte
 
 **Attribute:**
-- `warningThreshold : int`  
-- `criticalThreshold : int`  
+
+- `warningThreshold : int` – Warnschwelle (Low-Fill-Bereich)  
+- `criticalThreshold : int` – kritische Schwelle für das Abschalten der Heizung  
+- `calibration : std::unique_ptr<CalibrationData>` – Kalibrierdatenobjekt  
 
 **Methoden:**
-- `loadSettings()`  
-- `saveSettings()`  
-- `getCalibrationData() : CalibrationData`
+
+- `void loadSettings()` – lädt (simulierte) Einstellungen  
+- `void saveSettings()` – würde Einstellungen persistieren (Platzhalter)  
+- `int getWarningThreshold() const`  
+- `int getCriticalThreshold() const`  
+- `void setWarningThreshold(int value)`  
+- `void setCriticalThreshold(int value)`  
+- `CalibrationData &getCalibrationData()`  
+- `const CalibrationData &getCalibrationData() const`
 
 ---
 
 ### 3.11 `CalibrationData`
+
 **Rolle:** Speicherung der Kalibrierungsdaten  
 **Schicht:** PersistenceManager  
 
 **Aufgaben:**
+
 - Verwaltung der Füllstands- und Temperaturkennlinien  
-- Bereitstellung von Korrekturwerten für Sensorik  
+- Bereitstellung von Korrekturwerten für Sensorik
 
 **Attribute:**
-- `fillCalibValues : int[]`  
-- `tempCalibValues : float[]`  
+
+- `fillCalibValues : std::vector<int>` – Kalibrierwerte für Füllstand  
+- `tempCalibValues : std::vector<float>` – Kalibrierwerte für Temperatur  
 
 **Methoden:**
-- `getFillCalib() : int[]`  
-- `getTempCalib() : float[]`
+
+- `const std::vector<int> &getFillCalib() const`  
+- `const std::vector<float> &getTempCalib() const`  
+- `void setFillCalib(std::vector<int> values)`  
+- `void setTempCalib(std::vector<float> values)`
+
+---
+
+### 3.12 `ThresholdManager`
+
+**Rolle:** Verwaltung der zur Laufzeit genutzten Schwellwerte  
+**Schicht:** Steuerungslogik  
+
+**Aufgaben:**
+
+- Kapselt die aktuell vom System verwendeten Schwellen (Warn-/Kritisch)  
+- Wird vom `SystemController` mit Werten aus `SettingsStorage` initialisiert  
+- Unterstützt den kontinuierlichen Soll/Ist-Vergleich (**R2.2**)  
+
+**Attribute (implizit im Code, hier zusammengefasst):**
+
+- `warningThreshold : int`  
+- `criticalThreshold : int`  
+
+**Methoden:**
+
+- `void setWarningThreshold(int value)`  
+- `void setCriticalThreshold(int value)`  
+- `int getWarningThreshold() const`  
+- `int getCriticalThreshold() const`
+
+---
+
+### 3.13 `TimerService`
+
+**Rolle:** Zeitbasis für Simulation und Intervallmessung  
+**Schicht:** HardwareAbstraction  
+
+**Aufgaben:**
+
+- Bietet eine generische Funktionalität zur Messung verstrichener Zeit  
+- Steuert die Aktualisierungsintervalle von `FillLevelSensor` und `TemperatureSensor`  
+- Grundlage für die Berechnung von ΔT und damit u. a. relevant für **R2.3** und **R4.3**
+
+**Attribute:**
+
+- `lastUpdate : std::int64_t` – Timestamp der letzten erfolgreichen `elapsed()`-Abfrage  
+
+**Methoden:**
+
+- `bool elapsed(std::int64_t ms)` – gibt true zurück, wenn seit `lastUpdate` mindestens `ms` Millisekunden vergangen sind
 
 ---
 
 ## 4. Beziehungen zwischen den Klassen
 
 | **Beziehung** | **Beteiligte Klassen** | **Beschreibung** |
-|----------------|------------------------|------------------|
-| Aggregation | `SystemController` → `FillLevelSensor`, `TemperatureSensor`, `HeaterControl`, `DisplayController` | Zentrale Steuerung besitzt und verwendet diese Komponenten |
-| Assoziation | `SystemController` ↔ `SafetyManager`, `StateDetector` | Logische Zusammenarbeit bei Zustandsprüfung |
-| Komposition | `UserInterface` ↔ `DisplayController`, `BuzzerController`, `InputHandler` | UI besteht aus diesen Subkomponenten |
-| Abhängigkeit | `Steuerungslogik` → `PersistenceManager` | Steuerlogik nutzt gespeicherte Parameter |
-| Aggregation | `SettingsStorage` → `CalibrationData` | Persistenzmodul enthält Kalibrierdatenobjekt |
+|---------------|------------------------|------------------|
+| Aggregation   | `SystemController` → `FillLevelSensor`, `TemperatureSensor`, `HeaterControl`, `DisplayController`, `BuzzerController`, `InputHandler` | Zentrale Steuerung besitzt und verwendet diese Komponenten |
+| Assoziation   | `SystemController` ↔ `SafetyManager`, `StateDetector`, `ThresholdManager` | Zusammenarbeit bei Zustandsprüfung, Trockenlauf- und Überhitzungserkennung, Soll/Ist-Vergleich |
+| Assoziation   | `SystemController` ↔ `SettingsStorage` | Laden der Warn-/Kritisch-Schwellen und Kalibrierungsdaten |
+| Komposition   | `SettingsStorage` → `CalibrationData` | Persistenzmodul enthält Kalibrierdatenobjekt |
+| Abhängigkeit  | `FillLevelSensor`, `TemperatureSensor` → `TimerService` | Sensoren nutzen TimerService für zeitgesteuerte Simulation |
 
 ---
 
-## 5. Zusammenhang mit Anforderungen
+## 5. Zusammenhang mit Anforderungen (Fokus Sprint 2)
 
-| **Requirement-ID** | **Betroffene Klassen** | **Beschreibung** |
-|---------------------|------------------------|------------------|
-| R1.1, R1.2 | `FillLevelSensor`, `TemperatureSensor` | Erfassen und Filtern von Messwerten |
-| R2.1–R3.3 | `SystemController`, `StateDetector`, `SafetyManager` | Zustandslogik und Sicherheitsüberwachung |
-| R4.1–R4.3 | `SettingsStorage`, `CalibrationData` | Selbsttest, Fehlerdiagnose, Datenspeicherung |
-| R5.1–R5.5 | `DisplayController`, `BuzzerController`, `InputHandler` | Anzeige, Warnungen und Benutzerinteraktion |
+Die folgenden Zuordnungen beziehen sich insbesondere auf die in Sprint 2 bearbeiteten Requirements:
+
+| **Requirement-ID** | **Betroffene Klassen** | **Beschreibung / Umsetzung** |
+|--------------------|------------------------|------------------------------|
+| **R2.2** Kontinuierlicher Soll/Ist-Vergleich, Sicherheitsmodus | `SystemController`, `StateDetector`, `SafetyManager`, `ThresholdManager`, `SettingsStorage`, `FillLevelSensor`, `TemperatureSensor` | Kontinuierlicher Vergleich der aktuellen Sensorwerte mit Warn-/Kritisch-Schwellen, Aktivierung eines Sicherheitsmodus bei Sensorfehlern oder unplausiblen Werten; Zustandsdetektion unterstützt die Interpretation der Daten. |
+| **R2.3** Fehleranalyse: Sensorfehler, Überhitzung | `SystemController`, `SafetyManager`, `FillLevelSensor`, `TemperatureSensor`, `BuzzerController`, `DisplayController` | Erkennung von Trockenlauf auf Basis von Füllstand und ΔT, Überhitzungserkennung (Temperatur > Schwellwert), Unterscheidung verschiedener Fehlertypen durch spezifische Warntexte und Töne. |
+| **R4.1** Plausibilitätsprüfung beim Einschalten | `SystemController`, `FillLevelSensor`, `TemperatureSensor` | Beim ersten Zyklus wird mittels `performStartupPlausibilityCheck()` geprüft, ob Füllstand und Temperatur in zulässigen Grenzen liegen; bei Abweichung wird der Sicherheitsmodus aktiviert. |
+| **R4.2** Fehlerklassifizierung | `SystemController`, `SafetyManager`, `DisplayController`, `BuzzerController` | Verschiedene Fehlerursachen (Startup-Plausibilität, Sensorfehler, Trockenlauf, Überhitzung) werden über unterschiedliche Meldungstexte und Tonarten nach außen kommunikativ differenziert. |
+| **R4.3** Zyklischer Selbsttest | `SystemController`, `DisplayController`, `BuzzerController`, `TimerService` | `runSelfTest()` prüft in festen Zeitabständen, ob sich Sensorwerte verändern; bei Auffälligkeiten werden Warnmeldung und Warnton ausgelöst. |
+
+Bestehende Zuordnungen aus Sprint 1 (z. B. R1.x, R2.1, R3.x, R5.x) gelten weiterhin und werden durch die in Sprint 2 hinzugefügte Sicherheitslogik ergänzt.
 
 ---
-
-Das Klassendiagramm gewährleistet eine **klare Trennung der Verantwortlichkeiten** und eine **testbare modulare Struktur**.  
-Durch die Schichtenarchitektur ist das System:
-- **erweiterbar** (z. B. Bluetooth-Diagnose, Logging),
-- **fehlertolerant** (Sicherheitsabschaltung über SafetyManager),
-- **wartbar** (klare Schnittstellen),
-- und **hardwareunabhängig** (dank Abstraktionsschicht).
-
-Damit erfüllt die Architektur die funktionalen und nicht-funktionalen Anforderungen aus dem Pflichtenheft vollständig.
-
 
 ## Sequenzdiagramm
 
@@ -284,245 +451,227 @@ Damit erfüllt die Architektur die funktionalen und nicht-funktionalen Anforderu
 
 ## 1. Zweck des Sequenzdiagramms
 
-Das Sequenzdiagramm stellt den **Ablauf der Kommunikation zwischen den Systemkomponenten** während eines Trockenlauf-Ereignisses dar.  
-Es visualisiert den **zeitlichen Ablauf** der Interaktionen zwischen **Benutzer, Steuerlogik, Sensorik, Anzeige- und Sicherheitssystemen**, um zu zeigen, wie das System auf einen kritischen Zustand reagiert.
+Das Sequenzdiagramm stellt den **Ablauf der Kommunikation zwischen den Systemkomponenten** während eines sicherheitskritischen Ereignisses (z. B. Trockenlauf, Überhitzung oder Sensorfehler) dar.  
 
-Das Diagramm dient der **Überprüfung der Funktionslogik** und stellt sicher,  
-dass alle Anforderungen aus dem Pflichtenheft, insbesondere die unter **R3.1–R3.3 (Trockenlaufschutz und Sicherheitsabschaltung)**, korrekt umgesetzt sind.
+Mit den Erweiterungen aus **Sprint 2** zeigt das Diagramm insbesondere:
+
+- **Plausibilitätsprüfung beim Einschalten** (**R4.1**)  
+- **Kontinuierliche Überwachung** von Füllstand und Temperatur inkl. Soll/Ist-Vergleich (**R2.2**)  
+- **Fehleranalyse und Fehlerklassifizierung** (Trockenlauf, Überhitzung, Sensorfehler) (**R2.3, R4.2**)  
+- **Zyklischen Selbsttest** der Sensorik (**R4.3**)
 
 ---
 
 ## 2. Beteiligte Objekte / Akteure
 
-| **Objekt / Akteur** | **Beschreibung** |
-|----------------------|------------------|
-| **Benutzer** | Startet das Gerät und quittiert Fehlermeldungen. |
-| **DisplayController (UI)** | Zeigt aktuelle Zustände, Warnungen und Fehlermeldungen an. |
-| **SystemController (Control Logic)** | Zentrale Steuerung; koordiniert alle Komponenten und Abläufe. |
-| **SafetyManager (Control Logic)** | Überprüft Sensorwerte auf Trockenlaufbedingungen und führt Sicherheitsabschaltungen aus. |
-| **FillLevelSensor (Hardware)** | Erfasst den aktuellen Wasserstand. |
-| **TemperatureSensor (Hardware)** | Misst die Temperatur der Heizplatte. |
-| **HeaterControl (Hardware)** | Steuert das Heizelement (An/Aus). |
+| **Objekt / Akteur**       | **Beschreibung** |
+|---------------------------|------------------|
+| **Benutzer**              | Kann das Gerät starten und bei Bedarf Warnsignale stummschalten. |
+| **DisplayController (UI)**| Zeigt aktuelle Zustände, Warnungen und Fehlermeldungen an. |
 | **BuzzerController (UI)** | Gibt akustische Warnungen oder Fehlertöne aus. |
-| **SettingsStorage (Persistence)** | Speichert Fehlerereignisse und Systemparameter. |
+| **InputHandler (UI)**     | Liefert Benutzereingaben (z. B. zum Stoppen von Tönen) an den SystemController. |
+| **SystemController (Control Logic)** | Zentrale Steuerung; koordiniert alle Komponenten und Abläufe, inkl. Sicherheitsmodus, Plausibilitätscheck und Selbsttest. |
+| **StateDetector (Control Logic)** | Ermittelt den logischen Systemzustand aus Füllstand und Temperatur. |
+| **SafetyManager (Control Logic)** | Überprüft Werte auf Trockenlaufbedingungen und unterstützt Sicherheitsabschaltungen. |
+| **ThresholdManager (Control Logic)** | Hält konfigurierbare Warn- und Kritisch-Schwellen, die aus `SettingsStorage` geladen werden. |
+| **FillLevelSensor (Hardware)** | Erfasst den aktuellen Wasserstand. |
+| **TemperatureSensor (Hardware)** | Misst die Temperatur und liefert ΔT. |
+| **HeaterControl (Hardware)** | Steuert das Heizelement (An/Aus). |
+| **SettingsStorage (Persistence)** | Stellt Schwellwerte und Kalibrierungsdaten bereit. |
 
 ---
 
-## 3. Ablaufbeschreibung
+## 3. Ablaufbeschreibung (erweitert für Sprint 2)
 
-### 3.1 Initialisierung
+### 3.1 Initialisierung & Start-Plausibilitätsprüfung (R4.1)
+
 1. Der **Benutzer** schaltet das Gerät ein.  
-2. Der **DisplayController** zeigt den Startbildschirm.  
-3. Der **SystemController** lädt über den **SettingsStorage** die gespeicherten Schwellenwerte und Kalibrierungsdaten.  
-4. Alle Sensoren werden initialisiert, und das System geht in den Zustand **"Bereit"** über.
+2. Der **SystemController** lädt über den **SettingsStorage** Warn- und Kritischschwellen und übergibt sie an den **ThresholdManager**.  
+3. Im ersten Zyklus von `executeCycle()`:
+   - Der **FillLevelSensor** liefert den ersten Füllstand.  
+   - Der **TemperatureSensor** liefert die erste Temperatur.  
+   - `performStartupPlausibilityCheck()` prüft, ob beide Werte in einem zulässigen Bereich liegen.  
+   - Bei einem Fehler wird `enterSafetyMode("Startup plausibility failed")` aufgerufen → Heizung aus, Fehlermeldung am Display, Fehlerton.
 
----
+### 3.2 Zyklische Sensordatenerfassung & Zustandsdetektion (R2.2)
 
-### 3.2 Zyklische Sensordatenerfassung
-1. Der **SystemController** ruft regelmäßig (alle 200 ms) die Werte des **FillLevelSensor** und **TemperatureSensor** ab.  
-2. Diese Messwerte werden gefiltert und an den **SafetyManager** übergeben.  
-3. Der **SafetyManager** berechnet die Änderungsrate der Temperatur (ΔT/Δt) und überprüft den Füllstand.  
+1. In jedem Aufruf von `executeCycle()`:
+   - **FillLevelSensor** → aktueller Füllstand (ggf. nur in Updateintervallen)  
+   - **TemperatureSensor** → aktuelle Temperatur + ΔT über `getDeltaT()`  
+2. Der **SystemController** prüft:
+   - Ist der Füllstandswert gültig (`isValid()`)?  
+   - Liegt die Temperatur in einem physikalisch plausiblen Bereich?  
+   - Falls nicht, wird der Sicherheitsmodus aktiviert (`enterSafetyMode("Sensor error ...")`).  
+3. Der **StateDetector** berechnet den aktuellen Zustand (z. B. „Heating“, „LowFill“, „Boiling“).  
+4. Diese Informationen werden an **DisplayController** und **BuzzerController** weitergegeben, um Benutzerfeedback bereitzustellen.
 
----
+### 3.3 Fehleranalyse & Sicherheitsmaßnahmen (R2.3, R4.2)
 
-### 3.3 Trockenlauf-Erkennung
-1. Wird erkannt, dass der **Füllstand < 10 %** ist **oder** die Temperatur **mehr als 5 °C/s** steigt, meldet der **SafetyManager** einen Trockenlauf an den **SystemController**.  
-2. Der **SystemController** löst sofort folgende Aktionen aus:
-   - Abschalten der Heizung über den **HeaterControl** (`switchOff()`).
-   - Anzeige der Fehlermeldung „Trockenlauf erkannt“ über den **DisplayController**.
-   - Akustisches Signal (3× langer Ton) über den **BuzzerController**.
-   - Loggen des Ereignisses im **SettingsStorage**.
+1. **Trockenlauf-Erkennung:**  
+   - `SafetyManager::checkDryRun(fillLevel, ΔT)` analysiert Füllstand und Temperaturanstieg.  
+   - Bei Trockenlauf: `emergencyShutdown(heater)` schaltet die Heizung ab, der **SystemController** veranlasst Fehlerton und Fehlermeldung („Dry run detected“).  
 
----
+2. **Überhitzungserkennung:**  
+   - Der **SystemController** prüft den Temperaturwert (z. B. > 110 °C).  
+   - Bei Überhitzung: Heizung aus, Fehlerton, Warnmeldung („Critical: overheating“).  
 
-### 3.4 Benutzerquittierung
-1. Der **Benutzer** betätigt die Taste „OK“, um die Fehlermeldung zu quittieren.  
-2. Der **InputHandler** meldet die Eingabe an den **SystemController**.  
-3. Der **SystemController** löscht die Anzeige, schaltet das Heizelement wieder frei und wechselt in den Zustand **"Bereit"**.  
+3. **Schwellwertlogik:**  
+   - Liegt der Füllstand unterhalb der kritischen Schwelle → Heizung aus, Warnmeldung („Critical fill level“), Warnton.  
+   - Liegt der Füllstand unterhalb der Warnschwelle → Heizung an, Warnmeldung („Low fill level“), Warnton.  
+   - Ansonsten → Normalbetrieb: Heizung an, Anzeige ohne Warnung, kein Ton.  
+
+Die Kombination aus Meldungstexten und Tonarten stellt eine **Fehlerklassifizierung** nach R4.2 sicher.
+
+### 3.4 Benutzerinteraktion
+
+1. Der **Benutzer** kann über den **InputHandler** eine Taste betätigen.  
+2. Der **SystemController** fragt im Zyklus `inputHandler.readInput()` ab.  
+3. Bei Erkännung einer Eingabe wird in der aktuellen Implementierung der Buzzer gestoppt (`buzzerController.stopTone()`), sodass der Benutzer Warnsignale stummschalten kann.
+
+### 3.5 Zyklischer Selbsttest (R4.3)
+
+1. Der **SystemController** ruft am Ende eines Zyklus `runSelfTest(fillLevel, temperature)` auf.  
+2. In `runSelfTest()`:
+   - Es wird verfolgt, ob sich Füllstand und Temperatur über eine gewisse Zeitspanne nennenswert verändern.  
+   - Alle 30 s wird geprüft, ob sich die Werte in den letzten 10 s kaum geändert haben.  
+   - Falls nicht: Ausgabe einer Warnmeldung („Self-test: values unchanged“) und eines Warntons.  
 
 ---
 
 ## 4. Zeitliche Abfolge (Kurzbeschreibung)
 
-| **Schritt** | **Aktion** | **Beteiligte Komponenten** |
-|--------------|-------------|-----------------------------|
-| 1 | Systemstart | Benutzer, DisplayController, SystemController |
-| 2 | Laden von Kalibrierungsdaten | SystemController, SettingsStorage |
-| 3 | Sensordaten erfassen | FillLevelSensor, TemperatureSensor |
-| 4 | Trockenlauf erkennen | SafetyManager |
-| 5 | Sicherheitsabschaltung | HeaterControl |
-| 6 | Fehleranzeige & Warnsignal | DisplayController, BuzzerController |
-| 7 | Ereignis speichern | SettingsStorage |
-| 8 | Fehlerquittierung durch Benutzer | InputHandler, SystemController |
+| **Schritt** | **Aktion**                                          | **Beteiligte Komponenten** |
+|-------------|------------------------------------------------------|-----------------------------|
+| 1           | Systemstart, Laden der Einstellungen                | Benutzer, SystemController, SettingsStorage |
+| 2           | Start-Plausibilitätsprüfung (R4.1)                  | SystemController, FillLevelSensor, TemperatureSensor |
+| 3           | Sensordaten erfassen, Zustandsdetektion (R2.2)      | FillLevelSensor, TemperatureSensor, StateDetector |
+| 4           | Fehleranalyse: Trockenlauf / Überhitzung (R2.3)     | SafetyManager, SystemController, HeaterControl |
+| 5           | Sicherheitsabschaltung / Warnlogik (R2.2, R4.2)     | HeaterControl, DisplayController, BuzzerController |
+| 6           | Zyklischer Selbsttest (R4.3)                        | SystemController, TimerService, DisplayController, BuzzerController |
+| 7           | Benutzerinteraktion (Buzzer stummschalten)          | InputHandler, SystemController, BuzzerController |
 
 ---
 
-## 5. Fehlerbehandlung und Sicherheitslogik
+## 5. Bezug zu Requirements (Sequenzdiagramm)
 
-- Die **Abschaltung** erfolgt **innerhalb von ≤ 1 s** nach Erkennung der Trockenlaufbedingung.  
-- Bei Sensorausfall oder unplausiblen Werten wird der gleiche Sicherheitsmechanismus ausgelöst.  
-- Der **SafetyManager** arbeitet nach dem **Fail-Safe-Prinzip**:  
-  Jede Unsicherheit führt zu einem sicheren Zustand (Heizung aus, Warnung aktiv).  
-- Nach erfolgreicher Quittierung wird der **Normalbetrieb** automatisch wieder aufgenommen.
-
----
-
-## 6. Bezug zu Requirements
-
-| **Requirement-ID** | **Beschreibung** | **Abgebildet durch** |
-|--------------------|------------------|----------------------|
-| **R3.1** | Trockenlaufabschaltung bei Füllstand < 10 % oder Temperaturanstieg > 5 °C/s | SafetyManager, SystemController |
-| **R3.2** | Warnanzeige & akustisches Signal bei Trockenlauf | DisplayController, BuzzerController |
-| **R3.3** | Speicherung des Fehlers und Reaktivierung nach Quittierung | SettingsStorage, InputHandler |
-| **R4.2** | Fehlerklassifizierung und Sicherheitsreaktion | SafetyManager |
-| **R5.1–R5.4** | Benutzerinteraktion & Anzeige | UserInterface-Komponenten |
+| **Requirement-ID** | **Beschreibung**                                      | **Abgebildet durch** |
+|--------------------|--------------------------------------------------------|----------------------|
+| **R2.2**           | Kontinuierlicher Soll/Ist-Vergleich, Sicherheitsmodus | Zyklische Ausführung von `executeCycle()`, Nutzung von `ThresholdManager`, `enterSafetyMode()` |
+| **R2.3**           | Fehleranalyse: Sensorfehler, Überhitzung              | Kombination aus `checkDryRun()`, Überhitzungsprüfung und entsprechenden UI-Reaktionen |
+| **R4.1**           | Plausibilitätsprüfung beim Einschalten                | Einmalige Prüfung in `performStartupPlausibilityCheck()`, Aktivierung des Sicherheitsmodus bei Fehler |
+| **R4.2**           | Fehlerklassifizierung                                 | Unterschiedliche Meldungstexte und Tonarten für Startup-Fehler, Sensorfehler, Trockenlauf, Überhitzung |
+| **R4.3**           | Zyklischer Selbsttest                                 | Periodischer Aufruf von `runSelfTest()`, Selbsttest-Warnmeldungen |
 
 ---
-
-Das Sequenzdiagramm verdeutlicht, wie der **Trockenlaufschutz** technisch abläuft und welche Komponenten beteiligt sind.  
-Durch den klar strukturierten Ablauf wird sichergestellt, dass:
-
-- Sicherheitsfunktionen **deterministisch und zeitnah** ausgeführt werden,  
-- alle Systemzustände für den Benutzer **verständlich visualisiert** sind,  
-- das System **robust und fehlertolerant** auf Sensorfehler reagiert,  
-- und das Verhalten den **funktionalen Anforderungen (R1–R5)** aus dem Pflichtenheft vollständig entspricht.
-
-Damit dient das Sequenzdiagramm als **Beleg der dynamischen Systemarchitektur** und zeigt die **Interaktion zwischen Softwaremodulen und Hardware** während des sicherheitskritischen Betriebsfalls.
-
 
 ## Kommunikationsdiagramm
 
 ![Kommunikationsdiagramm](../referenziert/Design/Kommunikationsdiagramm2.png)
 
 ## 1. Ziel des Diagramms
+
 Das Kommunikationsdiagramm zeigt die **Interaktion und Nachrichtenflüsse** zwischen den Hauptkomponenten des Systems  
-während eines **Trockenlauf-Ereignisses**.  
-Im Gegensatz zum Sequenzdiagramm steht hier nicht die zeitliche Reihenfolge,  
-sondern die **kommunikative Verknüpfung** der Module im Vordergrund.  
-Es verdeutlicht, wie die Schichten **UserInterface**, **ControlLogic**, **HardwareAbstraction** und **PersistenceManager**  
-gemeinsam den sicherheitskritischen Fall „Trockenlauf erkannt“ verarbeiten.
+während eines sicherheitskritischen Ereignisses (Trockenlauf, Überhitzung, Sensorfehler) und berücksichtigt die in Sprint 2 eingeführten Mechanismen:
+
+- Sicherheitsmodus bei unplausiblen Werten (**R2.2, R4.1**)  
+- Differenzierte Reaktionen auf verschiedene Fehlerklassen (**R2.3, R4.2**)  
+- Selbsttest-Mechanismus (**R4.3**)
 
 ---
 
 ## 2. Beteiligte Komponenten
 
-| **Komponente** | **Rolle / Funktion** |
-|----------------|----------------------|
-| **User (Aktor)** | Startet und quittiert den Prozess (z. B. Einschalten, OK-Taste). |
-| **UserInterface (Display & Buzzer)** | Visualisiert Warnungen, zeigt Fehler an und gibt akustische Signale aus. |
-| **ControlLogic (SystemController & SafetyManager)** | Zentrale Steuerung, Zustandsüberwachung und Sicherheitsabschaltung. |
-| **HardwareAbstraction (Sensorik & Heizung)** | Liest Sensordaten aus (Füllstand, Temperatur) und schaltet die Heizung. |
-| **PersistenceManager (Datenspeicherung)** | Speichert Schwellenwerte, Kalibrierungen und Fehlerhistorie. |
+| **Komponente**        | **Rolle / Funktion** |
+|-----------------------|----------------------|
+| **User (Aktor)**      | Startet das Gerät, kann Warnsignale stummschalten. |
+| **UserInterface**     | `DisplayController`, `BuzzerController`, `InputHandler` – Visualisierung und akustische Signale, Eingabe. |
+| **ControlLogic**      | `SystemController`, `StateDetector`, `SafetyManager`, `ThresholdManager` – Zentrale Steuer- und Sicherheitslogik. |
+| **HardwareAbstraction** | `FillLevelSensor`, `TemperatureSensor`, `HeaterControl`, `TimerService` – Simulation von Sensorik und Aktorik. |
+| **PersistenceManager**| `SettingsStorage`, `CalibrationData` – Bereitstellung von Schwellwerten und Kalibrierdaten. |
 
 ---
 
 ## 3. Ablaufbeschreibung
 
-1. **Initialisierung:**  
-   Der Benutzer schaltet das Gerät ein.  
-   → `UserInterface` informiert die `ControlLogic`, welche über den `PersistenceManager` gespeicherte Einstellungen lädt.  
+1. **Initialisierung & Laden der Einstellungen:**  
+   - `ControlLogic` ruft `SettingsStorage.loadSettings()` auf und setzt die Schwellwerte im `ThresholdManager`.  
 
-2. **Sensordatenerfassung:**  
-   `ControlLogic` fragt über `HardwareAbstraction` die Sensoren ab (Füllstand, Temperatur).  
+2. **Sensordatenerfassung und Zustandsdetektion:**  
+   - `ControlLogic` fordert zyklisch über `HardwareAbstraction` Füllstand (`readLevel()`) und Temperatur (`readTemperature()`, `getDeltaT()`) an.  
+   - `StateDetector.detectState()` liefert den logischen Zustand.  
 
-3. **Trockenlauf-Erkennung:**  
-   Der `SafetyManager` innerhalb der `ControlLogic` erkennt den Trockenlauf (Füllstand < 10 % oder Temperaturanstieg > 5 °C/s).  
-   → Heizung wird deaktiviert, Warnungen und Töne werden aktiviert, Ereignis wird gespeichert.  
+3. **Plausibilitäts- und Fehlerprüfung:**  
+   - Zu Beginn: `SystemController.performStartupPlausibilityCheck(...)` prüft initiale Werte.  
+   - Laufend: `SystemController` prüft Sensorvalidität und Temperaturbereiche; `SafetyManager.checkDryRun(...)` erkennt Trockenlauf.  
 
-4. **Benutzerinteraktion:**  
-   Der Benutzer bestätigt den Fehler über die Taste **OK**.  
-   → Anzeige wird gelöscht, System kehrt in den Zustand „Bereit“ zurück, Heizung wird wieder freigegeben.
+4. **Sicherheitsreaktion und Fehlerklassifizierung:**  
+   - Bei Fehlern oder Grenzwertverletzungen:  
+     - `HeaterControl.switchOff()` oder `emergencyShutdown(heater)`  
+     - `DisplayController.showWarning("...")` mit der passenden Fehlermeldung  
+     - `BuzzerController.playWarningTone()` bzw. `playErrorTone()`  
+
+5. **Selbsttest:**  
+   - `SystemController.runSelfTest(...)` prüft periodisch, ob sich Sensorwerte verändern und meldet Abweichungen entsprechend.  
+
+6. **Benutzerinteraktion:**  
+   - `InputHandler.readInput()` liefert Tasterereignisse an `SystemController`.  
+   - Bei erkannter Eingabe stoppt `SystemController` z. B. den Ton (`BuzzerController.stopTone()`).
 
 ---
 
 ## 4. Kommunikationsstruktur (Kurzüberblick)
 
-| **Absender** | **Empfänger** | **Nachricht / Aktion** |
-|---------------|----------------|-------------------------|
-| `User` | `UserInterface` | Gerät einschalten / Taste OK drücken |
-| `UserInterface` | `ControlLogic` | `initSystem()`, `acknowledgeError()` |
-| `ControlLogic` | `PersistenceManager` | `loadSettings()`, `logEvent()` |
-| `ControlLogic` | `HardwareAbstraction` | `readFillLevel()`, `readTemperature()`, `switchOffHeater()` |
-| `ControlLogic` | `UserInterface` | `displayWarning()`, `playErrorTone()`, `clearDisplay()` |
+| **Absender**    | **Empfänger**        | **Nachricht / Aktion**                              |
+|-----------------|----------------------|-----------------------------------------------------|
+| `User`          | `UserInterface`      | Gerät einschalten, Taste betätigen                 |
+| `ControlLogic`  | `PersistenceManager` | `loadSettings()`                                   |
+| `ControlLogic`  | `HardwareAbstraction`| `readLevel()`, `readTemperature()`, `switchOn()`, `switchOff()` |
+| `ControlLogic`  | `UserInterface`      | `updateDisplay(...)`, `showWarning(...)`, `playWarningTone()`, `playErrorTone()`, `stopTone()` |
+| `UserInterface` | `ControlLogic`       | Tasterzustände über `readInput()`                  |
 
 ---
 
-## 5. Bezug zu Requirements
+## 5. Bezug zu Requirements (Kommunikationssicht)
 
-| **Requirement-ID** | **Abgebildet durch Kommunikation zwischen** | **Beschreibung** |
-|--------------------|----------------------------------------------|------------------|
-| **R1.1–R1.2** | ControlLogic ↔ HardwareAbstraction | Erfassen von Füllstand und Temperatur |
-| **R2.1–R3.3** | ControlLogic ↔ SafetyManager ↔ UI | Zustandslogik und Trockenlaufabschaltung |
-| **R4.1–R4.3** | ControlLogic ↔ PersistenceManager | Selbsttest, Kalibrierung, Fehlerlogging |
-| **R5.1–R5.5** | User ↔ UI ↔ ControlLogic | Anzeige, Warnsignale, Benutzerquittierung |
+| **Requirement-ID** | **Abgebildet durch Kommunikation zwischen**             | **Beschreibung** |
+|--------------------|--------------------------------------------------------|------------------|
+| **R1.1–R1.2**      | ControlLogic ↔ HardwareAbstraction                      | Erfassen von Füllstand und Temperatur, Berechnung von ΔT |
+| **R2.2**           | ControlLogic ↔ HardwareAbstraction ↔ UserInterface      | Soll/Ist-Vergleich, Sicherheitsmodus und Anzeige / Signalgebung |
+| **R2.3**           | ControlLogic ↔ SafetyManager ↔ UserInterface            | Trockenlauf- und Überhitzungserkennung mit passender Reaktion |
+| **R4.1–R4.3**      | ControlLogic ↔ HardwareAbstraction ↔ PersistenceManager | Plausibilitätsprüfung beim Einschalten, Selbsttest, Nutzung von Schwellwerten |
+| **R5.x** (UI)      | User ↔ UserInterface ↔ ControlLogic                     | Anzeige, Warnsignale, Benutzerinteraktion (z. B. Ton stoppen) |
 
 ---
-
-Das Kommunikationsdiagramm zeigt die **strukturierte Zusammenarbeit** aller Systemkomponenten:  
-- **ControlLogic** ist der zentrale Koordinator,  
-- **HardwareAbstraction** liefert Messwerte,  
-- **UserInterface** meldet Zustände an den Benutzer,  
-- **PersistenceManager** sichert Daten dauerhaft.  
-
-Diese Architektur gewährleistet **klare Schnittstellen, hohe Testbarkeit** und erfüllt alle sicherheitsrelevanten Anforderungen  
-zum **Trockenlaufschutz (R3.1–R3.3)** aus dem Pflichtenheft.
 
 ## Design Pattern
 
-## 1. Model-View-Controller (MVC)
+### 1. Model-View-Controller (MVC)
 
 **Art:** Architektur-Pattern  
 **Verwendung:** Zentrales Entwurfsmuster des Systems
 
-### Beschreibung
-Das gesamte System folgt dem **MVC-Prinzip**, um **Darstellung, Logik und Hardwarezugriff klar zu trennen**.
+| Schicht      | Komponenten / Klassen                                                                 | Aufgabe |
+|--------------|----------------------------------------------------------------------------------------|--------|
+| **Model**    | `SystemController`, `SafetyManager`, `StateDetector`, `ThresholdManager`, `FillLevelSensor`, `TemperatureSensor`, `HeaterControl`, `SettingsStorage`, `CalibrationData` | Verwaltung von Zuständen, Logik und Sensordaten |
+| **View**     | `DisplayController`, `BuzzerController`                                                | Darstellung von Systemzuständen, Warnungen und Fehlern |
+| **Controller** | `InputHandler`, Teile von `SystemController`                                        | Vermittlung zwischen Benutzerinteraktion, Anzeige und Logik |
 
-| Schicht | Komponenten / Klassen | Aufgabe |
-|----------|-----------------------|----------|
-| **Model** | `SystemController`, `SafetyManager`, `StateDetector`, `FillLevelSensor`, `TemperatureSensor`, `HeaterControl` | Verwaltung von Zuständen, Logik und Sensordaten |
-| **View** | `DisplayController`, `BuzzerController` | Darstellung von Systemzuständen, Warnungen und Fehlern |
-| **Controller** | `InputHandler`, `SystemController` | Vermittlung zwischen Benutzerinteraktion, Anzeige und Logik |
+**Vorteile:**
 
-### Vorteile
-- Klare Trennung der Verantwortlichkeiten  
-- Einfach test- und wartbar  
-- Erweiterbar (z. B. neue Anzeige oder neue Sensoren)
+- Klare Trennung von Darstellung, Logik und Hardwarezugriff  
+- Einfache Testbarkeit der einzelnen Schichten  
+- Gute Erweiterbarkeit (z. B. weitere Anzeigen, zusätzliche Diagnose-Ausgaben)
 
 ---
 
-## 1. Singleton
+### 2. Singleton
 
-**Art:** Erzeugungs-Pattern  
-**Verwendung:** In der Klasse `SystemController`,  `SafetyManager`, `StateDetector`
+Das Design nutzt **weiterhin konzeptionelle Singleton-Komponenten**:
 
-### Vorteile
-- Zentrale Steuerinstanz  
-- Einheitlicher Zugriff auf Systemstatus  
-- Vermeidung von Mehrfachinstanzen und widersprüchlichen Zuständen
+- **SystemController** – zentrale Instanz der Ablauf- & Sicherheitslogik  
+- **SafetyManager** – genau eine Instanz trifft Sicherheitsentscheidungen  
+- **StateDetector** – einheitliche Zustandsquelle  
 
+Auch wenn diese nicht als klassische Singleton-Implementierung (statische Methode) realisiert sind,  
+werden sie **logisch als eindeutig vorhandene Instanzen** verwendet.
 ---
-
-| Klasse             | Aufgabe                                    | Grund für Singleton                                     |
-| ------------------ | ------------------------------------------ | ------------------------------------------------------- |
-| `SystemController` | Zentrale Ablaufsteuerung und Koordination  | Nur eine Systeminstanz darf steuern                     |
-| `SafetyManager`    | Sicherheitsüberwachung und Abschaltung     | Nur eine Instanz darf Sicherheitsentscheidungen treffen |
-| `StateDetector`    | Zustandsanalyse und Systemstatus-Erkennung | Einheitlicher, globaler Systemzustand erforderlich      |
-
-
-## 2. Command
-
-**Art:** Verhaltens-Pattern  
-**Verwendung:** Konzeptuell in `InputHandler` vorbereitet
-
-### Beschreibung
-Das Command-Pattern ist vorbereitet, um Benutzeraktionen als **Befehle** zu kapseln.  
-So könnte z. B. ein Tastendruck (`OK`) als eigenes Kommando-Objekt (`AcknowledgeErrorCommand`) umgesetzt werden.  
-Dieses kann unabhängig von der Steuerlogik ausgeführt oder erweitert werden.
-
-### Vorteile
-- Entkopplung von Eingabe und Logik  
-- Leichte Erweiterbarkeit (neue Befehle, z. B. Reset, Diagnose)  
-- Saubere Trennung von Event-Verarbeitung und Systemreaktion
-
----
-
