@@ -34,11 +34,18 @@ public:
     //Gibt an, ob bereits ein gültiger Wert gelesen wurde.
     bool isValid() const;
 
+    // Auto-Refill (bei 0 -> 100) ein/aus
+    void setAutoRefillEnabled(bool enabled);
+
+    // Manuelles Füllen (z.B. Taste 'F')
+    void refillToFull();
+
 private:
     int analogPin;  //simuliert Analog Pin
     int fillLevelPercent;   //aktueller Füllstand (%)
     bool valid; //true, sobald mind. ein gültiger Wert vorliegt
     std::shared_ptr<TimerService> timerService; //Timer für die zeitgesteurte Simulation
+    bool autoRefillEnabled;
 };
 
 } // namespace hardware

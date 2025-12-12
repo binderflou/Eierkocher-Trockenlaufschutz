@@ -38,9 +38,30 @@ SystemController::SystemController(
 }
 
 void SystemController::executeCycle() {
+    // ===== Manueller Recovery-Flow nach Trockenlauf (Display eingefroren) =====
+    if (waitingForFill) {
+        heater.switchOff();
+        uiController.showWarning("Dry run! Press F to fill");
+        buzzerController.playErrorTone();
+        uiController.updateDisplay(lastUiFill_, static_cast<int>(lastUiTemp_), "WAIT_FOR_FILL");
+        return;
+    }
+
+    if (waitingForAck) {
+        heater.switchOff();
+        uiController.showWarning("Filled. Press A to restart");
+        buzzerController.playWarningTone();
+        uiController.updateDisplay(lastUiFill_, static_cast<int>(lastUiTemp_), "WAIT_FOR_ACK");
+        return;
+    }
+
     // 1. Sensoren auslesen
     int fillLevel = fillSensor.readLevel();
     float temperature = tempSensor.readTemperature();
+
+    // Anzeige-Merkwerte aktualisieren (nur im Normalbetrieb)
+    lastUiFill_ = fillLevel;
+    lastUiTemp_ = temperature;
 
     // Plausibilitätsprüfung beim Einschalten (R4.1)
     if (!startupChecked) {
@@ -73,7 +94,24 @@ void SystemController::executeCycle() {
     }
 
     lastFillLevel = fillLevel;
-    
+
+    // ===== Manueller Recovery-Flow nach Trockenlauf =====
+    if (waitingForFill) {
+        heater.switchOff();
+        uiController.showWarning("Dry run! Press F to fill");
+        buzzerController.playErrorTone();
+        uiController.updateDisplay(fillLevel, static_cast<int>(temperature), "WAIT_FOR_FILL");
+        return;
+    }
+
+    if (waitingForAck) {
+        heater.switchOff();
+        uiController.showWarning("Filled. Press A to restart");
+        buzzerController.playWarningTone();
+        uiController.updateDisplay(fillLevel, static_cast<int>(temperature), "WAIT_FOR_ACK");
+        return;
+    }
+
     // 2. Zustandsdetektion aktualisieren
     updateSystemState(fillLevel, temperature);
 
@@ -85,24 +123,33 @@ void SystemController::executeCycle() {
         return;
     }
 
-    // 3. Safety-Logik / Trockenlaufprüfung
     if (safetyManager.checkDryRun(fillLevel, tempSensor.getDeltaT())) {
-        // Trockenlauf erkannt -> Notabschaltung + Fehlerton + Warnung
         safetyManager.emergencyShutdown(heater);
-        uiController.showWarning("Dry run detected");
+
+        // Ab jetzt: kein automatisches Auffüllen mehr
+        fillSensor.setAutoRefillEnabled(false);
+
+        // In manuellen Recovery-Modus wechseln
+        waitingForFill = true;
+        waitingForAck = false;
+
+        uiController.showWarning("Dry run! Press F to fill");
         buzzerController.playErrorTone();
-    } else if (fillLevel < thresholdManager.getCriticalThreshold()) {
-        // Kritischer Füllstand -> Heizung aus, Warnung + Warnton
-        heater.switchOff();
-        uiController.showWarning("Critical fill level");
-        buzzerController.playWarningTone();
-    } else if (fillLevel < thresholdManager.getWarningThreshold()) {
-        // Warnschwelle unterschritten -> Heizung an, Warnung + Warnton
+        uiController.updateDisplay(fillLevel, static_cast<int>(temperature), "WAIT_FOR_FILL");
+        return;
+    }
+
+ else if (fillLevel <= thresholdManager.getCriticalThreshold()) {
+    heater.switchOff();
+    uiController.showWarning("Critical fill level");
+    buzzerController.playWarningTone();
+    }
+ else if (fillLevel <= thresholdManager.getWarningThreshold()) {
         heater.switchOn();
         uiController.showWarning("Low fill level");
         buzzerController.playWarningTone();
-    } else {
-        // Normalbetrieb -> Heizung an, Anzeige ohne Warnung, kein Ton
+        }
+ else {
         heater.switchOn();
         uiController.clearDisplay();
         buzzerController.stopTone();
@@ -110,23 +157,26 @@ void SystemController::executeCycle() {
 
     // 4. Anzeige aktualisieren (Füllstand, Temperatur, aktueller Zustand)
     uiController.updateDisplay(fillLevel, static_cast<int>(temperature),
-                               stateDetector.getState());
+        stateDetector.getState());
 
-    // 5. Benutzereingabe (OK-Taste etc.) auswerten
+// 5. Benutzereingabe (OK-Taste etc.) auswerten
     bool buttonState = inputHandler.readInput();
     bool buttonPressed = buttonState && !lastButtonState;
     lastButtonState = buttonState;
 
     if (buttonPressed) {
         if (!uiController.getWarningMessage().empty()) {
+            // OK-Taste quittiert nur noch Warnungen
             acknowledgeWarning();
-        } else {
-            adjustWarningThreshold();
         }
+    // Keine automatische Änderung der Warnschwelle mehr:
+    // else {
+    //     adjustWarningThreshold();
+    // }
     }
 
-    // 6. Zyklischer Selbsttest (R4.3)
-    runSelfTest(fillLevel, temperature);
+// 6. Zyklischer Selbsttest (R4.3)
+runSelfTest(fillLevel, temperature);
 }
 
 void SystemController::updateSystemState(int fillLevel, float temperature) {
@@ -198,5 +248,35 @@ void SystemController::adjustWarningThreshold() {
     uiController.showWarning("Warning threshold: " + std::to_string(next) + "%");
 }
 
-} // namespace logic
+void SystemController::onFillPressed() {
+    if (!waitingForFill) return;
 
+    // Manuell "Wasser nachfüllen"
+    fillSensor.refillToFull();
+
+    // Temperatur resetten, damit Trockenlaufbedingung nicht sofort wieder zuschlägt
+    tempSensor.resetTemperature();
+
+    lastUiFill_ = 100;
+    lastUiTemp_ = 20.0f;
+    waitingForFill = false;
+    waitingForAck = true;
+}
+
+void SystemController::onAckPressed() {
+    if (!waitingForAck) return;
+
+    // Trockenlauf-Flag zurücksetzen und wieder Normalbetrieb erlauben
+    safetyManager.resetDryRun();
+
+    // Auto-Refill wieder erlauben (Normal-Simulation)
+    fillSensor.setAutoRefillEnabled(true);
+
+    waitingForAck = false;
+    waitingForFill = false;
+
+    // UI “aufräumen”
+    uiController.clearWarning();
+    buzzerController.stopTone();
+}
+} // namespace logic

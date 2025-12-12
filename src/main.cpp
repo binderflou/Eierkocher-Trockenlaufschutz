@@ -2,6 +2,9 @@
 #include <iostream>
 #include <memory>
 #include <thread>
+#include <vector>
+#include <windows.h>
+#include <conio.h>
 
 #include "hardwareAbstraction/FillLevelSensor.h"
 #include "hardwareAbstraction/HeaterControl.h"
@@ -16,6 +19,16 @@
 #include "userInterface/BuzzerController.h"
 #include "userInterface/DisplayController.h"
 #include "userInterface/InputHandler.h"
+
+void clearConsole() {
+    // Bildschirm löschen und Cursor nach oben links setzen
+    std::cout << "\033[2J\033[H";
+}
+
+void setColor(int textColor) {
+    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+    SetConsoleTextAttribute(hConsole, textColor);
+}
 
 int main() {
     std::cout << "\n=== Eierkocher Trockenlauf-Simulation ===\n";
@@ -56,10 +69,49 @@ int main() {
     bool previousBuzzerState = buzzerController.isPlaying();
 
     while (true) {
-        // Ein Steuerungszyklus: Sensoren lesen, Logik ausführen, Display/Buzzer steuern
+        
+        if (_kbhit()) {
+            int ch = _getch();
+
+            if (ch == 'f' || ch == 'F') {
+                controller.onFillPressed();
+            }
+            else if (ch == 'a' || ch == 'A') {
+                controller.onAckPressed();
+            }
+            else if (ch == 'w' || ch == 'W') {
+                setColor(14); // gelb
+                std::cout << "\n\n[Eingabe] Neue Warnschwelle in % (10..50): ";
+                setColor(7);
+
+                int newThreshold;
+                std::cin >> newThreshold;
+
+                // Bereich einschränken
+                if (newThreshold < 10) newThreshold = 10;
+                if (newThreshold > 50) newThreshold = 50;
+
+                // ThresholdManager + SettingsStorage aktualisieren
+                thresholdManager.setWarningThreshold(newThreshold);
+                settingsStorage.setWarningThreshold(newThreshold);
+                settingsStorage.saveSettings();
+
+                setColor(10); // grün
+                std::cout << "\nWarnschwelle auf " << newThreshold << "% gesetzt.\n";
+                setColor(7);
+
+                // kurze Pause, damit man die Meldung sieht
+                std::this_thread::sleep_for(std::chrono::milliseconds(800));
+            }
+        }
+
+        // Displaybereich "leeren" und Cursor nach oben setzen
+        clearConsole();
+
+        // Steuerungszyklus ausführen
         controller.executeCycle();
 
-        // Werte aus der Display-Simulation abfragen (für Konsolenausgabe)
+        // Werte aus der Display-Simulation abfragen
         int currentFillLevel = displayController.getFillLevelDisplay();
         int currentTemperature = displayController.getTemperatureDisplay();
         std::string displayStatus = displayController.getStatusText();
@@ -69,59 +121,91 @@ int main() {
         bool buzzerState = buzzerController.isPlaying();
         std::string buzzerTone = buzzerController.getToneDescription();
 
-        std::cout << "[Zyklus " << cycle++ << "] Fuellstand: " << currentFillLevel
-                  << "% | Temperatur: " << currentTemperature
-                  << "C | Zustand: " << currentState
-                  << " | Display: " << displayStatus
-                  << " | Heizung: " << (heaterState ? "AN" : "AUS");
+        // ===== "Live-Display" Block =====
+        std::cout << "=== Eierkocher Trockenlauf-Simulation ===\n\n";
+        std::cout << "Zyklus:         " << cycle++ << "\n";
+        std::cout << "Tasten: [W] Warnschwelle setzen  [F] Fuellen  [A] OK/Restart \n";
+        std::cout << "-----------------------------------------------\n";
+        // Füllstand-Ampel basierend auf ThresholdManager
+        int critical = thresholdManager.getCriticalThreshold();
+        int warning = thresholdManager.getWarningThreshold();
+
+        // Farben: 12 = rot, 14 = gelb, 10 = grün, 7 = Standard
+        int color = 10; // grün als Default
+
+        if (currentFillLevel <= critical) {
+            color = 12; // rot = kritisch
+        }
+        else if (currentFillLevel <= warning) {
+            color = 14; // gelb = niedrig
+        }
+
+        setColor(color);
+        std::cout << "Fuellstand:      " << currentFillLevel << " %\n";
+        setColor(7); // wieder auf Standard zurück
+
+        //std::cout << "Fuellstand:     " << currentFillLevel << " %\n";
+        std::cout << "Temperatur:     " << currentTemperature << " °C\n";
+        std::cout << "Zustand:        " << currentState << "\n";
+        std::cout << "Display:        " << displayStatus << "\n";
+        std::cout << "Heizung:        " << (heaterState ? "AN" : "AUS") << "\n";
+        std::cout << "Buzzer:         "
+            << (buzzerState ? ("aktiv (" + buzzerTone + ")") : "aus") << "\n";
 
         if (!warningMessage.empty()) {
-            std::cout << " | Warnung: " << warningMessage;
+            std::cout << "Warnung:        " << warningMessage << "\n";
         }
 
-        if (buzzerState) {
-            std::cout << " | Buzzer aktiv (" << buzzerTone << ")";
-        }
+        std::cout << "\n---------------------------------------\n";
 
-        std::cout << std::endl;
-        
-        //Ereignis-Logging Warnungswechsel
+        // ===== Ereignisse nur für diesen Zyklus sammeln =====
+        std::vector<std::string> events;
+
         if (warningMessage != previousWarning) {
             if (!warningMessage.empty()) {
-                std::cout << "  -> Neues Ereignis: Warnung '" << warningMessage
-                          << "'" << std::endl;
-            } else {
-                std::cout << "  -> Ereignis: Warnung quittiert" << std::endl;
+                events.push_back("Neue Warnung: '" + warningMessage + "'");
+            }
+            else {
+                events.push_back("Warnung quittiert");
             }
             previousWarning = warningMessage;
         }
 
-        //Ereignis Logging für Zustandswechsel
         if (currentState != previousState) {
-            std::cout << "  -> Systemzustand geaendert zu '" << currentState
-                      << "'" << std::endl;
+            events.push_back("Systemzustand geaendert zu '" + currentState + "'");
             previousState = currentState;
         }
 
-        //Ereignis Logging für Heizungszustand
         if (heaterState != previousHeaterState) {
-            std::cout << "  -> Heizung wurde "
-                      << (heaterState ? "eingeschaltet" : "ausgeschaltet")
-                      << std::endl;
+            events.push_back(
+                std::string("Heizung ")
+                + (heaterState ? "eingeschaltet" : "ausgeschaltet"));
             previousHeaterState = heaterState;
         }
 
-        //Ereignis Logging für Buzzerzustand
         if (buzzerState != previousBuzzerState) {
-            std::cout << "  -> Buzzer "
-                      << (buzzerState ? "gestartet" : "gestoppt") << std::endl;
+            events.push_back(
+                std::string("Buzzer ")
+                + (buzzerState ? "gestartet" : "gestoppt"));
             previousBuzzerState = buzzerState;
         }
 
-        //Simulierter Zyklusabstand: 0.5 sek für mindestens 2 Updates pro Sekunde (R2.2)
+        if (!events.empty()) {
+            std::cout << "Ereignisse:\n";
+            for (const auto& e : events) {
+                std::cout << " - " << e << "\n";
+            }
+        }
+        else {
+            std::cout << "Ereignisse:\n - (keine Aenderungen in diesem Zyklus)\n";
+        }
+
+        //Simulierter Zyklusabstand
         std::this_thread::sleep_for(std::chrono::milliseconds(500));
+
+        // etwas warten, damit man das "Display" lesen kann
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     }
 
     return 0;
 }
-

@@ -7,8 +7,17 @@ namespace logic {
 SafetyManager::SafetyManager() : dryRunDetected(false) {}
 
 bool SafetyManager::checkDryRun(int fillLevel, float tempRise) {
-    //Füllstand<5% und Temp. Anstieg > 5°C pro Messintervall
-    dryRunDetected = fillLevel < 5 && tempRise > 5.0f;
+    // Wenn Trockenlauf bereits erkannt wurde, bleibt er aktiv
+    // bis resetDryRun() aufgerufen wird (z.B. nach 'A').
+    if (dryRunDetected) {
+        return true;
+    }
+
+    // Erst-Erkennung: Füllstand < 5% UND Temperaturanstieg > 5°C pro Messintervall
+    if (fillLevel < 5 && tempRise > 5.0f) {
+        dryRunDetected = true;
+    }
+
     return dryRunDetected;
 }
 
@@ -21,5 +30,8 @@ void SafetyManager::emergencyShutdown(hardware::HeaterControl &heater) {
 
 bool SafetyManager::isDryRunDetected() const { return dryRunDetected; }
 
-} // namespace logic
+void SafetyManager::resetDryRun() {
+    dryRunDetected = false;
+}
 
+} // namespace logic

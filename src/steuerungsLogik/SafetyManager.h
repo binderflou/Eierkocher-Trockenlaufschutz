@@ -37,6 +37,8 @@ public:
      */
     bool isDryRunDetected() const;
 
+    void resetDryRun();
+
 private:
     bool dryRunDetected;    //Trockenlauf erkannt JA/NEIN
 };

@@ -68,6 +68,11 @@ public:
      */
     void handleError(int errorCode);
 
+    // Von main() aufgerufen (Konsole)
+    void onFillPressed(); // Taste 'F'
+    
+    void onAckPressed();  // Taste 'A'
+
 private:
     bool performStartupPlausibilityCheck(int fillLevel, float temperature);
     void enterSafetyMode(const std::string &reason);
@@ -93,6 +98,10 @@ private:
     int lastObservedFill = -1;
     float lastObservedTemperature = -999.0f;
     bool lastButtonState = false;
+    bool waitingForFill = false;
+    bool waitingForAck = false;
+    int lastUiFill_ = 0;
+    float lastUiTemp_ = 20.0f;
 };
 
 } // namespace logic
